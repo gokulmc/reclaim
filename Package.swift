@@ -1,9 +1,9 @@
 // swift-tools-version:5.9
 import PackageDescription
 
-// Note: an additional `ReclaimApp` (SwiftUI menu bar) executable target is planned for a
-// later milestone (M1+) but is intentionally not added yet — M0 is ReclaimKit + reclaim-cli
-// only. See docs/SPEC.md and docs/IMPLEMENTATION.md.
+// M1-M4: ReclaimApp is the SwiftUI menu bar shell (MenuBarExtra + detail panel). It depends
+// only on ReclaimKit — no UI logic lives in the library. See docs/SPEC.md and
+// docs/IMPLEMENTATION.md ("App (M1-M4)").
 let package = Package(
     name: "Reclaim",
     platforms: [
@@ -11,7 +11,8 @@ let package = Package(
     ],
     products: [
         .library(name: "ReclaimKit", targets: ["ReclaimKit"]),
-        .executable(name: "reclaim-cli", targets: ["reclaim-cli"])
+        .executable(name: "reclaim-cli", targets: ["reclaim-cli"]),
+        .executable(name: "ReclaimApp", targets: ["ReclaimApp"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0")
@@ -26,6 +27,12 @@ let package = Package(
             dependencies: [
                 "ReclaimKit",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ]
+        ),
+        .executableTarget(
+            name: "ReclaimApp",
+            dependencies: [
+                "ReclaimKit"
             ]
         ),
         .testTarget(
