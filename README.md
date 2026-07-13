@@ -99,11 +99,11 @@ cd reclaim
 This is not on the App Store, and cannot be: the App Sandbox forbids both shelling out
 via `Process` (needed to run `fstrim` and backend CLIs) and arbitrary Unix domain socket
 access (needed to talk to the Docker Engine API). Both are load-bearing for this app to
-work at all, so it ships unsandboxed, signed with a Developer ID, outside the store.
+work at all, so it ships unsandboxed, outside the store — you build it from source.
 
 `./setup-signing.sh` is optional — it creates a stable local code-signing identity so
-rebuilds don't repeatedly trigger Keychain access prompts. Without it, `build.sh` falls
-back to ad-hoc signing.
+macOS treats rebuilds as the same app (keeping permissions and Login Items intact across
+rebuilds). Without it, `build.sh` falls back to ad-hoc signing, which works fine too.
 
 ## CLI usage
 
