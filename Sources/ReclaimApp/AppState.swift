@@ -53,6 +53,15 @@ final class AppState: ObservableObject {
     /// run so it never lingers past the run that produced it.
     @Published private(set) var showSlowBuildNote = false
 
+    // MARK: - Docker per-image selection (M4b, docs/design/docker-image-selection.html)
+
+    /// IDs ticked in the opt-in "Remove specific images…" disclosure under the Docker "Unused
+    /// app images" row. Nothing pre-ticked — same "nothing selected by default" convention as
+    /// `selectedCacheIDs`. This is a **Docker** operation (unlike the cache flow), so it
+    /// deliberately shares `logLines`/`lastReport`/`isCleaning`/`recordHistory` with `runClean()`
+    /// rather than getting its own parallel state.
+    @Published var selectedImageIDs: Set<String> = []
+
     // MARK: - History
 
     @Published private(set) var history: [HistoryEntry] = []
@@ -270,6 +279,68 @@ final class AppState: ObservableObject {
 
     func loadHistory() {
         history = ((try? historyStore.load()) ?? []).sorted { $0.date > $1.date }
+    }
+
+    // MARK: - Docker per-image selection + removal (M4b, docs/design/docker-image-selection.html)
+
+    func toggleImageSelection(_ id: String) {
+        if selectedImageIDs.contains(id) {
+            selectedImageIDs.remove(id)
+        } else {
+            selectedImageIDs.insert(id)
+        }
+    }
+
+    func clearImageSelection() {
+        selectedImageIDs.removeAll()
+    }
+
+    /// Kicks off `Reclaimer.cleanSelected` on a detached task and streams its `CleanEvent`s back
+    /// to the main actor, mirroring `runClean()`'s detached-work/`AsyncStream`/@MainActor-
+    /// assignment shape exactly — same `DockerClient`/`Reclaimer` construction off-thread, same
+    /// `handle(event:)` consumer. Unlike the dev-tool cache flow (which is deliberately kept
+    /// separate from the Docker CTA's state), this **is** a Docker operation, so reusing the
+    /// existing `logLines`/`lastReport`/`isCleaning`/`recordHistory` is correct and intended —
+    /// the per-image progress/result surfaces through the same `ProgressLogView`/result card
+    /// `DetailPanelView` already renders for `runClean()`. `runClean()` itself is untouched.
+    func removeSelectedImages() {
+        guard !isCleaning, !selectedImageIDs.isEmpty, let detected else { return }
+        isCleaning = true
+        logLines.removeAll()
+        lastReport = nil
+        showSlowBuildNote = false
+        completedMappedSteps = 0
+
+        let backend = detected.backend
+        let socketPath = detected.socketPath
+        let selection = DockerSelection(imageIDs: Array(selectedImageIDs), includeBuildCache: false)
+        let options = CleanOptions(dryRun: previewMode)
+
+        let (stream, continuation) = AsyncStream<CleanEvent>.makeStream()
+
+        Task.detached(priority: .userInitiated) {
+            let client = DockerClient(socketPath: socketPath)
+            let reclaimer = Reclaimer(dockerClient: client, backend: backend)
+            do {
+                _ = try await reclaimer.cleanSelected(selection, options: options) { event in
+                    continuation.yield(event)
+                }
+            } catch {
+                continuation.yield(.log("Error: \(error)"))
+            }
+            continuation.finish()
+        }
+
+        Task {
+            for await event in stream {
+                handle(event: event)
+            }
+            // Fallback in case the stream ended without a `.done` (e.g. a thrown error) — never
+            // leave the button stuck, and always clear the selection once this run is over
+            // (successful or not) so a stale image id never lingers into the next refresh.
+            isCleaning = false
+            selectedImageIDs.removeAll()
+        }
     }
 
     // MARK: - Dev-tool cache selection + clean (M3b, see docs/design/caches-section.html)

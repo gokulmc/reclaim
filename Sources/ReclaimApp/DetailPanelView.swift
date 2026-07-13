@@ -236,6 +236,14 @@ struct DetailPanelView: View {
                 tagForeground: df.imagesReclaimableSize > 0 ? Palette.tagCleanableFG : Palette.tagNoneFG,
                 tagBackground: df.imagesReclaimableSize > 0 ? Palette.tagCleanableBG : Palette.tagNoneBG
             )
+
+            // Opt-in, collapsed-by-default disclosure (M4b, docs/design/docker-image-selection.html):
+            // purely additive under the "Unused app images" row above — collapsed, the Docker
+            // breakdown is byte-for-byte what it was before this milestone.
+            if !df.images.isEmpty {
+                imageSelectionDisclosure(df: df)
+            }
+
             ItemRow(
                 emoji: "⏹️",
                 chipTint: Palette.containers,
@@ -289,6 +297,120 @@ struct DetailPanelView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Docker per-image selection (M4b, `.disc`/`.img`/`.bar` in
+    // docs/design/docker-image-selection.html)
+
+    /// The opt-in "Remove specific images…" disclosure, collapsed by default (SwiftUI's
+    /// `DisclosureGroup` default state), inserted directly under the "Unused app images"
+    /// `ItemRow` above. A small blue-accent caption label — matching the design card's `.disc`
+    /// style, reusing the same tint `ItemRow`'s CLEANABLE tag already uses — nothing else in
+    /// `itemizedSections` changes shape or order.
+    private func imageSelectionDisclosure(df: DiskUsage) -> some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(df.images.sorted { $0.size > $1.size }, id: \.id) { image in
+                    imageRow(image)
+                }
+
+                Text("In-use or multi-tagged images are skipped automatically — your running stack is never broken.")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 26)
+                    .padding(.trailing, 11)
+                    .padding(.top, 2)
+                    .padding(.bottom, 4)
+
+                imageActionBar(df: df)
+            }
+            .padding(.top, 2)
+        } label: {
+            Text("Remove specific images…")
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(Palette.tagCleanableFG)
+        }
+        .padding(.horizontal, 11)
+        .padding(.top, 2)
+        .padding(.bottom, 2)
+    }
+
+    /// One selectable image row (`.img` in the design card): a leading checkbox — reusing the
+    /// exact same `CacheCheckbox` control `SelectableItemRow`/`SelectableAppCacheRow` use — the
+    /// image's repo:tag (or a short id fallback) in a monospaced font, and its size. Images
+    /// still referenced by a container (`isUnused == false`) render greyed out with an
+    /// "in use · skipped" note and a permanently-off, non-interactive checkbox: they are never
+    /// selectable, matching `Reclaimer.cleanSelected`'s own `force: false` skip behavior.
+    private func imageRow(_ image: ImageSummary) -> some View {
+        HStack(spacing: 9) {
+            CacheCheckbox(isOn: image.isUnused ? imageSelectionBinding(for: image.id) : .constant(false))
+                .disabled(!image.isUnused)
+
+            Text(image.repoTags.first ?? String(image.id.prefix(19)))
+                .font(.system(size: 12, design: .monospaced))
+                .lineLimit(1)
+
+            Spacer()
+
+            if image.isUnused {
+                Text(appFormatBytes(image.size))
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            } else {
+                Text("in use \u{00B7} skipped")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.leading, 26)
+        .padding(.trailing, 11)
+        .padding(.vertical, 3)
+        .opacity(image.isUnused ? 1 : 0.45)
+    }
+
+    private func imageSelectionBinding(for id: String) -> Binding<Bool> {
+        Binding(
+            get: { appState.selectedImageIDs.contains(id) },
+            set: { _ in appState.toggleImageSelection(id) }
+        )
+    }
+
+    /// "N selected · ≈ X" summary + the `CTAButtonStyle` action button. Disabled while a clean
+    /// is already running or nothing is selected. Progress/result are **not** rendered here —
+    /// `removeSelectedImages()` reuses `handle(event:)`, so they appear through the existing
+    /// Docker `ProgressLogView(lines: appState.logLines)` + `resultSection` already wired up
+    /// above in `body`.
+    private func imageActionBar(df: DiskUsage) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("\(appState.selectedImageIDs.count) selected \u{00B7} \u{2248} \(appFormatBytes(selectedImageBytes(df: df)))")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            Button {
+                appState.removeSelectedImages()
+            } label: {
+                HStack(spacing: 6) {
+                    if appState.isCleaning {
+                        ProgressView().controlSize(.small)
+                    }
+                    Text(appState.previewMode ? "See what I\u{2019}d remove" : "Remove selected images")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(CTAButtonStyle())
+            .disabled(appState.isCleaning || appState.selectedImageIDs.isEmpty)
+        }
+        .padding(.leading, 26)
+        .padding(.trailing, 11)
+        .padding(.top, 4)
+        .padding(.bottom, 4)
+    }
+
+    private func selectedImageBytes(df: DiskUsage) -> Int64 {
+        df.images
+            .filter { appState.selectedImageIDs.contains($0.id) }
+            .reduce(0) { $0 + $1.size }
     }
 
     private func sectionLabel(_ text: String) -> some View {

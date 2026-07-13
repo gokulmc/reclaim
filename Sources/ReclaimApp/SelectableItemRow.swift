@@ -62,8 +62,10 @@ struct SelectableAppCacheRow: View {
 
 /// The checkbox control itself (shared by both row flavors above): a filled circle + checkmark
 /// when on, tinted `Palette.ctaFill` — the same blue the design card's `.ck.on` uses — and a
-/// plain dimmed outline circle when off.
-private struct CacheCheckbox: View {
+/// plain dimmed outline circle when off. Internal (not `private`) so M4b's per-image rows in
+/// `DetailPanelView` can reuse the exact same control for the "Remove specific images…"
+/// disclosure rather than redrawing the checkbox glyph themselves.
+struct CacheCheckbox: View {
     @Binding var isOn: Bool
 
     var body: some View {

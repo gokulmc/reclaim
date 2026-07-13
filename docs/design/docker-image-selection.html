@@ -1,0 +1,105 @@
+<!-- @dsCard group="Reclaim" name="Docker per-image selection (opt-in)" subtitle="Docker breakdown identical at rest; opt-in 'Remove specific images' disclosure — light & dark" width="740" height="640" -->
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+    background:linear-gradient(150deg,#a5aec0 0%,#77839a 100%); display:flex; gap:40px; flex-wrap:wrap;
+    justify-content:center; align-items:flex-start; padding:34px; -webkit-font-smoothing:antialiased; }
+  .col { display:flex; flex-direction:column; gap:9px; align-items:center; }
+  .cap { color:#fff; font-size:12px; font-weight:600; opacity:.95; }
+  .panel { width:320px; border-radius:13px; padding:6px; box-shadow:0 16px 48px rgba(0,0,0,.32), inset 0 0 0 .5px rgba(255,255,255,.12); }
+  .light { background:rgba(248,248,250,.96); color:#1d1d1f; }
+  .dark  { background:rgba(32,32,36,.96); color:#f2f2f4; }
+  .sep { height:1px; margin:6px 11px; } .light .sep{background:rgba(0,0,0,.08);} .dark .sep{background:rgba(255,255,255,.1);}
+  .sect { padding:8px 11px 4px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .light .sect{color:rgba(0,0,0,.35);} .dark .sect{color:rgba(255,255,255,.35);}
+
+  /* existing docker row (unchanged) */
+  .row { display:flex; align-items:center; gap:11px; padding:8px 11px; border-radius:8px; }
+  .chip { width:28px; height:28px; border-radius:7px; flex:none; display:flex; align-items:center; justify-content:center; font-size:14px; background:rgba(94,92,230,.16); }
+  .mid { flex:1; min-width:0; } .mid .n { font-size:13px; font-weight:500; } .mid .d { font-size:11px; margin-top:2px; }
+  .light .mid .d{color:rgba(0,0,0,.48);} .dark .mid .d{color:rgba(255,255,255,.5);}
+  .col2 { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+  .sz { font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .tag { font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:5px; background:rgba(10,132,255,.16); color:#0a72e0; } .dark .tag{color:#4da3ff;}
+
+  /* opt-in disclosure */
+  .disc { display:flex; align-items:center; gap:7px; padding:6px 11px 6px 50px; font-size:11.5px; font-weight:600; }
+  .disc .tri { font-size:10px; } .light .disc{color:#0a72e0;} .dark .disc{color:#4da3ff;}
+
+  /* per-image selectable rows */
+  .img { display:flex; align-items:center; gap:10px; padding:5px 11px 5px 50px; }
+  .ck { width:16px; height:16px; border-radius:5px; flex:none; display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; }
+  .ck.on { background:#0a84ff; } .ck.off { box-shadow:inset 0 0 0 1.5px rgba(120,120,128,.5); }
+  .img .n { font-size:12px; font-variant-numeric:tabular-nums; } .img .n .mono { font-family:ui-monospace,Menlo,monospace; font-size:11px; }
+  .img .s { margin-left:auto; font-size:11.5px; font-variant-numeric:tabular-nums; } .light .img .s{color:rgba(0,0,0,.55);} .dark .img .s{color:rgba(255,255,255,.55);}
+  .img.dis { opacity:.45; }
+  .note { padding:3px 11px 4px 50px; font-size:10.5px; } .light .note{color:rgba(0,0,0,.42);} .dark .note{color:rgba(255,255,255,.45);}
+
+  .bar { padding:6px 11px 4px 50px; }
+  .cta { display:block; width:100%; padding:7px 0; border-radius:8px; background:#0a84ff; color:#fff; font-size:12.5px; font-weight:600; text-align:center; }
+  .tgl { display:flex; align-items:flex-start; gap:9px; margin-top:9px; }
+  .sw { flex:none; width:30px; height:18px; border-radius:9px; background:#34c759; position:relative; margin-top:1px; }
+  .sw i { position:absolute; top:1.5px; right:1.5px; width:15px; height:15px; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.25); }
+  .tt b { font-size:11.5px; font-weight:600; } .tt p { font-size:10.5px; margin-top:1px; } .light .tt p{color:rgba(0,0,0,.48);} .dark .tt p{color:rgba(255,255,255,.5);}
+  .ghost { opacity:.5; }
+</style>
+
+<!-- ===================== COLLAPSED (default) ===================== -->
+<div class="col">
+  <div class="cap">Collapsed — Docker breakdown identical to today</div>
+  <div class="panel light">
+    <div class="sect">Safe to clear</div>
+    <div class="row ghost">
+      <div class="chip" style="background:rgba(10,132,255,.15)">🧱</div>
+      <div class="mid"><div class="n">Build leftovers</div><div class="d">Scraps from building images</div></div>
+      <div class="col2"><span class="sz">652 MB</span><span class="tag">CLEANABLE</span></div>
+    </div>
+    <div class="row">
+      <div class="chip">📦</div>
+      <div class="mid"><div class="n">Unused app images</div><div class="d">Downloads nothing is running now</div></div>
+      <div class="col2"><span class="sz">1.7 GB</span><span class="tag">CLEANABLE</span></div>
+    </div>
+    <!-- the ONE new thing at rest: a subtle opt-in link under Images -->
+    <div class="disc"><span class="tri">▸</span><span>Remove specific images…</span></div>
+    <div class="row ghost">
+      <div class="chip" style="background:rgba(255,159,10,.16)">⏹️</div>
+      <div class="mid"><div class="n">Finished containers</div><div class="d">Programs that already exited</div></div>
+      <div class="col2"><span class="sz">0 B</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== EXPANDED ===================== -->
+<div class="col">
+  <div class="cap">Expanded — pick individual images</div>
+  <div class="panel dark">
+    <div class="sect">Safe to clear</div>
+    <div class="row">
+      <div class="chip">📦</div>
+      <div class="mid"><div class="n">Unused app images</div><div class="d">Downloads nothing is running now</div></div>
+      <div class="col2"><span class="sz">1.7 GB</span><span class="tag">CLEANABLE</span></div>
+    </div>
+
+    <div class="disc"><span class="tri">▾</span><span>Remove specific images…</span></div>
+    <div class="img"><span class="ck off"></span><span class="n"><span class="mono">myapp:dev</span></span><span class="s">1.2 GB</span></div>
+    <div class="img"><span class="ck on">✓</span><span class="n"><span class="mono">postgres:14</span></span><span class="s">380 MB</span></div>
+    <div class="img"><span class="ck off"></span><span class="n"><span class="mono">nginx:latest</span></span><span class="s">142 MB</span></div>
+    <div class="img dis"><span class="ck off"></span><span class="n"><span class="mono">redis:7</span> · in use</span><span class="s">— skipped</span></div>
+    <div class="note">In-use or multi-tagged images are skipped automatically — your running stack is never broken.</div>
+
+    <div class="bar">
+      <div style="display:flex; align-items:baseline; margin-bottom:7px;"><span style="font-size:12px; font-weight:700;">1 selected · ≈ 380 MB</span></div>
+      <div class="cta">See what I’d remove</div>
+      <div class="tgl"><span class="sw"><i></i></span><div class="tt"><b>Show me first</b><p>Nothing is removed until you turn this off.</p></div></div>
+    </div>
+
+    <div class="row ghost">
+      <div class="chip" style="background:rgba(255,159,10,.16)">⏹️</div>
+      <div class="mid"><div class="n">Finished containers</div><div class="d">Programs that already exited</div></div>
+      <div class="col2"><span class="sz">0 B</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="cap" style="width:100%; text-align:center; opacity:.9">Opt-in disclosure under the Images row · rest state identical to today · reuses SelectableItemRow · in-use images skipped · dry-run default</div>
