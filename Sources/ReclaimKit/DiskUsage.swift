@@ -283,3 +283,17 @@ public struct PruneResult: Equatable {
         self.spaceReclaimed = spaceReclaimed
     }
 }
+
+/// Result of `DELETE /images/{id}`. Unlike the prune endpoints, Docker's wire shape here is a
+/// **JSON array** of per-layer actions — `[{"Untagged": "repo:tag"}, {"Deleted": "sha256:..."}]`
+/// — not a single object with a `SpaceReclaimed` field, so it needs its own decode path (see
+/// `DockerClient.decodeImageDeleteResult`) rather than reusing `decodePruneResult`.
+public struct ImageDeleteResult: Equatable {
+    public let untagged: [String]
+    public let deleted: [String]
+
+    public init(untagged: [String], deleted: [String]) {
+        self.untagged = untagged
+        self.deleted = deleted
+    }
+}

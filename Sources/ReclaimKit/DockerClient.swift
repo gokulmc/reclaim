@@ -3,6 +3,7 @@ import Foundation
 public enum DockerClientError: Error, CustomStringConvertible, Equatable {
     case unexpectedStatus(Int, String)
     case decodingFailed(String)
+    case invalidRequest(String)
 
     public var description: String {
         switch self {
@@ -10,6 +11,8 @@ public enum DockerClientError: Error, CustomStringConvertible, Equatable {
             return "Docker API returned HTTP \(code): \(body)"
         case .decodingFailed(let reason):
             return "Failed to decode Docker API response: \(reason)"
+        case .invalidRequest(let reason):
+            return "Invalid Docker API request: \(reason)"
         }
     }
 }
@@ -67,6 +70,29 @@ public struct DockerClient {
     public func pruneContainers() async throws -> PruneResult {
         let response = try await send(method: "POST", path: "/containers/prune")
         return try Self.decodePruneResult(response, deletedKeys: ["ContainersDeleted"])
+    }
+
+    /// `DELETE /images/{id}?force=…` — removes a single named image (named selective cleanup,
+    /// as opposed to `pruneImages()`'s all-unused sweep). Routes through the same validated
+    /// `send` egress as every other method here, so `SafetyGuard` still checks it — it already
+    /// allows image `DELETE` and still blocks anything volume-shaped.
+    ///
+    /// `id` is checked *before* any request is built: it must be non-empty and contain no
+    /// `"/"`, so a caller can never smuggle an extra path segment into the URL this method
+    /// constructs. The check throws synchronously, so an invalid id never reaches the socket.
+    ///
+    /// Docker returns **409** when the image can't be removed (still referenced by a running
+    /// container, or by more than one tag, since `force` always defaults to `false` here per
+    /// the app's "never force-delete" policy) — that's surfaced as a thrown
+    /// `DockerClientError.unexpectedStatus`, which a caller removing several images (see
+    /// `Reclaimer.cleanSelected`) can catch per-image and continue rather than aborting the
+    /// whole run.
+    public func deleteImage(id: String, force: Bool = false) async throws -> ImageDeleteResult {
+        guard !id.isEmpty, !id.contains("/") else {
+            throw DockerClientError.invalidRequest("deleteImage: id must be non-empty and contain no \"/\" (got \"\(id)\")")
+        }
+        let response = try await send(method: "DELETE", path: "/images/\(id)?force=\(force ? "true" : "false")")
+        return try Self.decodeImageDeleteResult(response)
     }
 
     /// `GET /volumes` — **read-only**. There is no corresponding delete/prune method on this
@@ -142,6 +168,36 @@ public struct DockerClient {
             }
         }
         return PruneResult(deleted: deleted, spaceReclaimed: spaceReclaimed)
+    }
+
+    /// Decodes `DELETE /images/{id}`'s response, which — unlike the prune endpoints — is a
+    /// JSON **array** of `{"Untagged": "..."}` / `{"Deleted": "sha256:..."}` objects, so
+    /// `decodePruneResult`'s single-object shape doesn't fit. Tolerates an empty body or a
+    /// literal `null` body (both become an empty result) — Docker has been observed to send
+    /// either for a no-op removal.
+    static func decodeImageDeleteResult(_ response: HTTPResponse) throws -> ImageDeleteResult {
+        guard response.statusCode == 200 else {
+            throw DockerClientError.unexpectedStatus(response.statusCode, bodyText(response))
+        }
+
+        let trimmedText = bodyText(response).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty, trimmedText.lowercased() != "null" else {
+            return ImageDeleteResult(untagged: [], deleted: [])
+        }
+
+        let json: Any
+        do {
+            json = try JSONSerialization.jsonObject(with: response.body, options: [.fragmentsAllowed])
+        } catch {
+            throw DockerClientError.decodingFailed("image delete result: \(error)")
+        }
+        guard let items = json as? [[String: Any]] else {
+            throw DockerClientError.decodingFailed("image delete result: not a JSON array")
+        }
+
+        let untagged = items.compactMap { $0["Untagged"] as? String }
+        let deleted = items.compactMap { $0["Deleted"] as? String }
+        return ImageDeleteResult(untagged: untagged, deleted: deleted)
     }
 }
 

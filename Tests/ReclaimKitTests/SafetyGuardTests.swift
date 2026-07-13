@@ -52,4 +52,26 @@ final class SafetyGuardTests: XCTestCase {
     func testAllowsPostContainersPrune() {
         XCTAssertNoThrow(try SafetyGuard.validate(method: "POST", path: "/containers/prune"))
     }
+
+    // MARK: - Named selective Docker cleanup (M4a): per-image DELETE allowed, volumes still blocked
+
+    func testAllowsDeleteImageByID() {
+        XCTAssertNoThrow(try SafetyGuard.validate(method: "DELETE", path: "/images/sha256:abc"))
+    }
+
+    func testAllowsDeleteImageByIDWithForceQueryParam() {
+        XCTAssertNoThrow(try SafetyGuard.validate(method: "DELETE", path: "/images/foo?force=true"))
+    }
+
+    func testStillRejectsDeleteVolumesByNameAfterImageDeleteAdded() {
+        XCTAssertThrowsError(try SafetyGuard.validate(method: "DELETE", path: "/volumes/abc")) { error in
+            XCTAssertTrue(error is SafetyGuard.Violation)
+        }
+    }
+
+    func testStillRejectsDeleteVersionedVolumesByNameAfterImageDeleteAdded() {
+        XCTAssertThrowsError(try SafetyGuard.validate(method: "DELETE", path: "/v1.41/volumes/abc")) { error in
+            XCTAssertTrue(error is SafetyGuard.Violation)
+        }
+    }
 }
