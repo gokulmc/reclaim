@@ -28,6 +28,19 @@ final class AppState: ObservableObject {
         caches.reduce(0) { $0 + $1.sizeBytes }
     }
 
+    /// IDs ticked in the "Dev tool caches" section (M3b) — `ScannedCache.id`s: either a
+    /// single-directory definition id (e.g. `"npm"`) or a per-app child id (e.g.
+    /// `"library-caches/com.apple.Safari"`). Nothing is pre-ticked (plan: "nothing pre-ticked
+    /// by default, with a Select all safe button").
+    @Published var selectedCacheIDs: Set<String> = []
+
+    /// Self-contained progress log for the cache clean flow. Deliberately **not** the Docker
+    /// `logLines` below — `CacheSectionView` renders its own progress/result entirely inside
+    /// itself, so the Docker CTA's log/result area is never touched by (or touches) a cache run.
+    @Published private(set) var cacheLogLines: [String] = []
+    @Published private(set) var cacheReport: CleanReport?
+    @Published private(set) var isCleaningCaches = false
+
     // MARK: - Clean run
 
     /// Dry-run is ON by default (SPEC.md §2.4: dry-run must be the default).
@@ -257,6 +270,109 @@ final class AppState: ObservableObject {
 
     func loadHistory() {
         history = ((try? historyStore.load()) ?? []).sorted { $0.date > $1.date }
+    }
+
+    // MARK: - Dev-tool cache selection + clean (M3b, see docs/design/caches-section.html)
+
+    func toggleCacheSelection(_ id: String) {
+        if selectedCacheIDs.contains(id) {
+            selectedCacheIDs.remove(id)
+        } else {
+            selectedCacheIDs.insert(id)
+        }
+    }
+
+    /// Ticks every scanned cache whose `CacheDefinition` regenerates on its own AND expands as
+    /// a single directory — i.e. every "safe" tool cache (npm, Xcode DerivedData, Homebrew, ...)
+    /// but never the per-app `~/Library/Caches` children, which aren't a blanket "safe" set
+    /// (some apps rely on their cache surviving between launches more than others).
+    func selectAllSafeCaches() {
+        let safeDefinitionIDs = Set(
+            CacheCatalog.default()
+                .filter { $0.regenerates && $0.expansion == .singleDirectory }
+                .map(\.id)
+        )
+        selectedCacheIDs = Set(
+            caches.filter { safeDefinitionIDs.contains($0.definitionID) }.map(\.id)
+        )
+    }
+
+    func clearCacheSelection() {
+        selectedCacheIDs.removeAll()
+    }
+
+    /// Kicks off `CacheReclaimer.clean` on a detached task and streams its `CleanEvent`s back to
+    /// the main actor, mirroring `runClean()`'s detached-work/`AsyncStream`/@MainActor-assignment
+    /// shape exactly — but writing into the cache-only `cacheLogLines`/`cacheReport`/
+    /// `isCleaningCaches` state above, never the Docker `logLines`/`lastReport`/`isCleaning`.
+    /// `.step`/`.log` text is appended verbatim (no "Step N of 3" mapping — that mapper is
+    /// Docker-step-name-specific and lives in `plainLogLine(for:)` above).
+    func cleanSelectedCaches() {
+        guard !isCleaningCaches, !selectedCacheIDs.isEmpty else { return }
+        isCleaningCaches = true
+        cacheLogLines.removeAll()
+        cacheReport = nil
+
+        let selection = selectedCacheIDs
+        let options = CleanOptions(dryRun: previewMode)
+
+        let (stream, continuation) = AsyncStream<CleanEvent>.makeStream()
+
+        Task.detached(priority: .userInitiated) {
+            let reclaimer = CacheReclaimer()
+            do {
+                _ = try await reclaimer.clean(selection: selection, options: options) { event in
+                    continuation.yield(event)
+                }
+            } catch {
+                continuation.yield(.log("Error: \(error)"))
+            }
+            continuation.finish()
+        }
+
+        Task {
+            for await event in stream {
+                handle(cacheEvent: event)
+            }
+            // Fallback in case the stream ended without a `.done` (e.g. a thrown error) — never
+            // leave the button stuck in "Cleaning...".
+            isCleaningCaches = false
+        }
+    }
+
+    private func handle(cacheEvent event: CleanEvent) {
+        switch event {
+        case .step(let text):
+            cacheLogLines.append(text)
+        case .log(let text):
+            cacheLogLines.append(text)
+        case .done(let report):
+            cacheReport = report
+            isCleaningCaches = false
+            guard !report.dryRun else { return }
+            recordCacheHistory(for: report)
+            Task { await self.refresh() }
+        }
+    }
+
+    private func recordCacheHistory(for report: CleanReport) {
+        let entry = HistoryEntry(
+            date: Date(),
+            backend: nil,
+            imagesReclaimed: 0,
+            buildCacheReclaimed: 0,
+            containersReclaimed: 0,
+            trimmedBytes: 0,
+            hostDelta: report.hostDelta,
+            source: .caches,
+            cachesReclaimed: report.hostDelta
+        )
+        do {
+            try historyStore.append(entry)
+            loadHistory()
+        } catch {
+            cacheLogLines.append("warning: failed to record history: \(error)")
+        }
     }
 
     // MARK: - Start Colima
