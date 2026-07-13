@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test
+
+  # Regression gate for the one bug that would lose user data: a code path that can
+  # prune a Docker volume. See docs/SPEC.md §2 and §8. The forbidden request path is
+  # never spelled out literally in this file (it's assembled at runtime below) so that
+  # a repo-wide grep for it doesn't flag this workflow itself.
+  safety-regression:
+    runs-on: macos-15
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Source grep — forbidden request path must not appear in Sources/
+        run: |
+          PART1="volumes/"
+          PART2="prune"
+          FORBIDDEN="${PART1}${PART2}"
+          if grep -R "$FORBIDDEN" Sources/; then
+            echo "Found the forbidden request path in Sources/ — a volume-destructive code path must never exist. See docs/SPEC.md section 2."
+            exit 1
+          fi
+          echo "OK: no match in Sources/"
+
+      - name: Build release CLI
+        run: swift build -c release --product reclaim-cli
+
+      - name: Binary grep — forbidden request path must not appear in the release binary
+        run: |
+          PART1="volumes/"
+          PART2="prune"
+          FORBIDDEN="${PART1}${PART2}"
+          if strings .build/release/reclaim-cli | grep "$FORBIDDEN"; then
+            echo "Found the forbidden request path in the built reclaim-cli binary. This must never happen."
+            exit 1
+          fi
+          echo "OK: no match in the release binary"
