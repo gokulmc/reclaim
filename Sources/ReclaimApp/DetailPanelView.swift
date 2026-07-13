@@ -4,79 +4,151 @@ import ReclaimKit
 
 /// The single window-style detail panel behind the menu bar icon. Stock SwiftUI controls
 /// only — no custom glass/vibrancy layers, no custom popover chrome (locked UI-style decision,
-/// docs/IMPLEMENTATION.md). Layout and copy follow the approved redesign in
-/// docs/design/panel.html and docs/design/copy.html: one plain-language junk number instead of
-/// the old four-card Docker breakdown, "Show me first" instead of "Preview (dry run)", and a
-/// green "Your data is safe" strip instead of a raw volumes table.
+/// docs/IMPLEMENTATION.md; the `MenuBarExtra(.window)` style already provides the panel's own
+/// material). Layout, hierarchy, spacing, and token values follow the approved v4 redesign in
+/// docs/design/panel.html: a rounded hero free-space figure, a health pill driven by the same
+/// `DiskLevel` thresholds as the menu bar icon, a Docker-footprint stack-bar with legend, and
+/// itemised "Safe to clear" / "Protected — never touched" rows with CLEANABLE/SAFE/NONE tags.
 struct DetailPanelView: View {
     @EnvironmentObject var appState: AppState
 
+    private let panelWidth: CGFloat = 320
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 0) {
                 headerSection
-
-                Divider()
 
                 if appState.detected != nil {
                     if let df = appState.diskUsage {
-                        heroJunkCard(df: df)
-                        controlsSection
+                        divider
+
+                        itemizedSections(df: df)
+
+                        divider
+                        ctaSection(df: df)
+
                         if let report = appState.lastReport {
                             resultSection(report: report)
                         }
                         if !appState.logLines.isEmpty {
                             ProgressLogView(lines: appState.logLines)
+                                .padding(.horizontal, 11)
+                                .padding(.top, 6)
+                                .padding(.bottom, 8)
                         }
-                        Divider()
-                        safetyStrip(df: df)
                     } else {
                         ProgressView("Checking what Docker is sitting on…")
+                            .padding(16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 } else {
+                    divider
                     startColimaSection
+                        .padding(11)
                 }
 
-                Divider()
-                HistorySectionView()
-                SchedulingSectionView()
+                divider
+                VStack(alignment: .leading, spacing: 10) {
+                    HistorySectionView()
+                    SchedulingSectionView()
+                }
+                .padding(.horizontal, 11)
+                .padding(.vertical, 8)
 
-                Divider()
+                divider
                 footerSection
             }
-            .padding(16)
         }
-        .frame(width: 380)
+        .frame(width: panelWidth)
         .frame(minHeight: 240, maxHeight: 640)
     }
 
-    // MARK: - Header
+    private var divider: some View {
+        Divider().padding(.horizontal, 11)
+    }
+
+    // MARK: - Header (`.header`: brand + hero + subline + health pill + footprint stack-bar)
 
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Image(nsImage: MenuBarIcon.image(tint: nil))
-                Text("Reclaim").font(.title3.weight(.bold))
-                Spacer()
-                if appState.isRefreshing {
-                    ProgressView().controlSize(.small)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    brandRow
+                    heroRow.padding(.top, 9)
+                    sublineRow.padding(.top, 5)
                 }
+                Spacer(minLength: 8)
+                HealthPill(level: appState.diskLevel)
             }
 
+            if let df = appState.diskUsage {
+                footprintBlock(df: df).padding(.top, 14)
+            }
+        }
+        .padding(.horizontal, 11)
+        .padding(.top, 11)
+        .padding(.bottom, 12)
+    }
+
+    private var brandRow: some View {
+        HStack(spacing: 6) {
+            Image(nsImage: MenuBarIcon.image(tint: nil))
+                .resizable()
+                .renderingMode(.template)
+                .frame(width: 15, height: 15)
+            Text("Reclaim")
+                .font(.system(size: 12, weight: .semibold))
+        }
+        .foregroundStyle(.secondary)
+    }
+
+    private var heroRow: some View {
+        Group {
             if let stat = appState.diskStat {
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(appFormatBytes(stat.freeBytes))
-                        .font(.title2.weight(.bold))
-                    Text("free on your Mac")
-                        .font(.subheadline)
+                let split = appFormatBytesSplit(stat.freeBytes)
+                HStack(alignment: .lastTextBaseline, spacing: 6) {
+                    Text(split.value)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .tracking(-0.5)
+                        .monospacedDigit()
+                    Text("\(split.unit) free")
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
-                ProgressView(value: usedFraction(stat: stat))
-                    .tint(.accentColor)
             } else {
                 Text("Checking your disk…")
-                    .font(.subheadline)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// Idle: "of 460 GB · 88% used". After a real (non-preview) run: "+12.4 GB just returned ·
+    /// 41.3 → 53.7" (docs/design/panel.html, dark "after a run" mockup).
+    private var sublineRow: some View {
+        Group {
+            if let report = appState.lastReport, !report.dryRun {
+                (
+                    Text("+\(appFormatBytes(report.hostDelta)) ")
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                    + Text("just returned · ")
+                    + Text("\(appFormatBytes(report.hostFreeBefore)) \u{2192} \(appFormatBytes(report.hostFreeAfter))")
+                        .monospacedDigit()
+                )
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            } else if let stat = appState.diskStat {
+                (
+                    Text("of ")
+                    + Text(appFormatBytes(stat.totalBytes)).fontWeight(.semibold).monospacedDigit()
+                    + Text(" \u{00B7} ")
+                    + Text("\(usedPercent(stat: stat))%").fontWeight(.semibold).monospacedDigit()
+                    + Text(" used")
+                )
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
             }
         }
     }
@@ -87,75 +159,183 @@ struct DetailPanelView: View {
         return min(max(used / Double(stat.totalBytes), 0), 1)
     }
 
-    // MARK: - Hero junk card
+    private func usedPercent(stat: DiskStat) -> Int {
+        Int((usedFraction(stat: stat) * 100).rounded())
+    }
 
-    /// Replaces the old four-card Docker breakdown (Build Cache / Images / Containers /
-    /// Volumes) with one plain sentence and one number; the technical split moves behind
-    /// "What exactly?" (docs/design/copy.html).
-    private func heroJunkCard(df: DiskUsage) -> some View {
-        // Build cache + images only — containers aren't counted here because pruning them is
-        // off by default (see `totalMappedSteps` in AppState) and the headline number should
-        // match what the CTA button below is actually about to reclaim.
-        let junkBytes = df.buildCacheReclaimableSize + df.imagesReclaimableSize
+    // MARK: - Docker footprint stack-bar (`.foot-hd` + `.stackbar` + `.legend`)
 
-        return VStack(alignment: .leading, spacing: 6) {
-            Text("Docker is sitting on ≈ \(appFormatBytes(junkBytes)) of junk")
-                .font(.subheadline.weight(.semibold))
-            Text("Old build leftovers and unused downloads. Safe to clear — Docker recreates anything it needs later.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            DisclosureGroup("What exactly?") {
-                VStack(alignment: .leading, spacing: 4) {
-                    breakdownRow(label: "Build leftovers", value: df.buildCacheReclaimableSize)
-                    breakdownRow(label: "Unused app images", value: df.imagesReclaimableSize)
-                    breakdownRow(label: "Finished containers", value: df.stoppedContainersSize)
-                }
-                .padding(.top, 2)
+    private func footprintBlock(df: DiskUsage) -> some View {
+        let total = df.buildCacheTotalSize + df.imagesTotalSize + df.stoppedContainersSize + df.volumesTotalSize
+        return VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Docker is using")
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .tracking(0.5)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.tertiary)
+                Spacer()
+                Text(appFormatBytes(total))
+                    .font(.system(size: 12, weight: .semibold))
+                    .monospacedDigit()
             }
-            .font(.caption)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.accentColor.opacity(0.1)))
-    }
 
-    private func breakdownRow(label: String, value: Int64) -> some View {
-        HStack {
-            Text(label).foregroundStyle(.secondary)
-            Spacer()
-            Text(appFormatBytes(value)).monospacedDigit()
+            StackBarView(segments: [
+                StackBarSegment(color: Palette.buildCache, value: df.buildCacheTotalSize),
+                StackBarSegment(color: Palette.images, value: df.imagesTotalSize),
+                StackBarSegment(color: Palette.containers, value: df.stoppedContainersSize),
+                StackBarSegment(color: Palette.yourData, value: df.volumesTotalSize)
+            ])
+
+            FootprintLegend(items: legendItems(df: df))
         }
     }
 
-    // MARK: - Controls (CTA + "Show me first")
+    /// Only non-zero categories are shown — this naturally hides "Containers" whenever there
+    /// are no stopped containers, per the design ("include Containers only if > 0").
+    private func legendItems(df: DiskUsage) -> [FootprintLegendItem] {
+        [
+            FootprintLegendItem(color: Palette.buildCache, name: "Build cache", value: df.buildCacheTotalSize),
+            FootprintLegendItem(color: Palette.images, name: "Images", value: df.imagesTotalSize),
+            FootprintLegendItem(color: Palette.containers, name: "Containers", value: df.stoppedContainersSize),
+            FootprintLegendItem(color: Palette.yourData, name: "Your data", value: df.volumesTotalSize)
+        ].filter { $0.value > 0 }
+    }
 
-    private var controlsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+    // MARK: - Itemised rows (`.sect` + `.row`)
+
+    private func itemizedSections(df: DiskUsage) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionLabel("Safe to clear")
+
+            ItemRow(
+                emoji: "🧱",
+                chipTint: Palette.buildCache,
+                name: "Build leftovers",
+                description: "Scraps from building images — rebuilt automatically",
+                size: df.buildCacheReclaimableSize,
+                tagText: df.buildCacheReclaimableSize > 0 ? "CLEANABLE" : "NONE",
+                tagForeground: df.buildCacheReclaimableSize > 0 ? Palette.tagCleanableFG : Palette.tagNoneFG,
+                tagBackground: df.buildCacheReclaimableSize > 0 ? Palette.tagCleanableBG : Palette.tagNoneBG
+            )
+            ItemRow(
+                emoji: "📦",
+                chipTint: Palette.images,
+                name: "Unused app images",
+                description: "Downloads nothing is running right now",
+                size: df.imagesReclaimableSize,
+                tagText: df.imagesReclaimableSize > 0 ? "CLEANABLE" : "NONE",
+                tagForeground: df.imagesReclaimableSize > 0 ? Palette.tagCleanableFG : Palette.tagNoneFG,
+                tagBackground: df.imagesReclaimableSize > 0 ? Palette.tagCleanableBG : Palette.tagNoneBG
+            )
+            ItemRow(
+                emoji: "⏹️",
+                chipTint: Palette.containers,
+                name: "Finished containers",
+                description: "Programs that already exited",
+                size: df.stoppedContainersSize,
+                tagText: df.stoppedContainersCount > 0 ? "\(df.stoppedContainersCount)" : "NONE",
+                tagForeground: df.stoppedContainersCount > 0 ? Palette.tagCleanableFG : Palette.tagNoneFG,
+                tagBackground: df.stoppedContainersCount > 0 ? Palette.tagCleanableBG : Palette.tagNoneBG
+            )
+
+            divider
+            sectionLabel("Protected — never touched")
+
+            VStack(alignment: .leading, spacing: 0) {
+                ItemRow(
+                    emoji: "🔒",
+                    chipTint: Palette.yourData,
+                    name: "Your data",
+                    description: "\(df.volumesCount) volume\(df.volumesCount == 1 ? "" : "s") — databases & project files",
+                    size: df.volumesTotalSize,
+                    tagText: "SAFE",
+                    tagForeground: Palette.tagSafeFG,
+                    tagBackground: Palette.tagSafeBG
+                )
+
+                if !df.volumes.isEmpty {
+                    DisclosureGroup("Which volumes?") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(df.volumes, id: \.name) { volume in
+                                HStack {
+                                    Text(volume.name)
+                                    Spacer()
+                                    if let size = volume.usageSize, size >= 0 {
+                                        Text(appFormatBytes(size))
+                                            .foregroundStyle(.secondary)
+                                            .monospacedDigit()
+                                    } else {
+                                        Text("size unknown").foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
+                        }
+                        .font(.caption2)
+                        .padding(.top, 2)
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, 11)
+                    .padding(.top, 2)
+                    .padding(.bottom, 6)
+                }
+            }
+        }
+    }
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 10.5, weight: .semibold))
+            .tracking(0.5)
+            .textCase(.uppercase)
+            .foregroundStyle(.tertiary)
+            .padding(.horizontal, 11)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+    }
+
+    // MARK: - CTA block (`.ctawrap`)
+
+    private func ctaSection(df: DiskUsage) -> some View {
+        let readyBytes = df.buildCacheReclaimableSize + df.imagesReclaimableSize
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .lastTextBaseline) {
+                Text("Ready to free ≈ \(appFormatBytes(readyBytes))")
+                    .font(.system(size: 13.5, weight: .bold))
+                Spacer()
+                Text("data never touched")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
             Button {
                 appState.runClean()
             } label: {
-                HStack {
+                HStack(spacing: 6) {
                     if appState.isCleaning {
                         ProgressView().controlSize(.small)
                     }
                     Text(buttonTitle)
-                        .frame(maxWidth: .infinity)
                 }
+                .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(CTAButtonStyle())
             .disabled(appState.isCleaning)
 
             Toggle(isOn: $appState.previewMode) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Show me first")
+                        .font(.system(size: 12.5, weight: .semibold))
                     Text(toggleCaption)
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
             }
             .disabled(appState.isCleaning)
         }
+        .padding(.horizontal, 11)
+        .padding(.top, 4)
+        .padding(.bottom, 6)
     }
 
     /// Button text follows the toggle (docs/design/copy.html: "[ Preview ] / [ Reclaim ]" →
@@ -173,79 +353,39 @@ struct DetailPanelView: View {
             : "Off — the next run cleans for real."
     }
 
-    // MARK: - Result
+    // MARK: - Result (`.res`)
 
     private func resultSection(report: CleanReport) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        Group {
             if report.dryRun {
                 let estimated = report.steps.reduce(Int64(0)) { $0 + $1.dockerReportedBytes }
-                Text("You’d get back about \(appFormatBytes(estimated))")
-                    .font(.subheadline.weight(.semibold))
-                Text("Estimate — the real, measured number is shown after a cleanup.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                resultCard(
+                    title: "You’d get back about \(appFormatBytes(estimated))",
+                    caption: "Estimate — the real, measured number is shown after a cleanup.",
+                    tint: Color.secondary.opacity(0.08)
+                )
             } else {
-                Text("🎉 \(appFormatBytes(report.hostDelta)) returned to your Mac")
-                    .font(.headline)
-                Text("Free space went \(appFormatBytes(report.hostFreeBefore)) \u{2192} \(appFormatBytes(report.hostFreeAfter)). That’s the real number, measured on your disk.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                resultCard(
+                    title: "🎉 \(appFormatBytes(report.hostDelta)) returned to your Mac",
+                    caption: "The real number, measured on your disk — not Docker’s estimate.",
+                    tint: Color.green.opacity(0.14)
+                )
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(report.dryRun ? Color.secondary.opacity(0.08) : Color.green.opacity(0.14))
-        )
     }
 
-    // MARK: - Safety strip
-
-    /// Replaces the old "Volumes" breakdown card + protected-volumes `GroupBox` list with a
-    /// green "Your data is safe" strip; the volume names/sizes move behind a small
-    /// `DisclosureGroup` inside it so they're still reachable (docs/design/copy.html).
-    private func safetyStrip(df: DiskUsage) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Label("Your data is safe", systemImage: "lock.fill")
-                .font(.caption.weight(.semibold))
-            Text(safetyCaption(count: df.volumesCount))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if !df.volumes.isEmpty {
-                DisclosureGroup("Which volumes?") {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(df.volumes, id: \.name) { volume in
-                            HStack {
-                                Text(volume.name)
-                                Spacer()
-                                if let size = volume.usageSize, size >= 0 {
-                                    Text(appFormatBytes(size)).foregroundStyle(.secondary)
-                                } else {
-                                    Text("size unknown").foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                    .font(.caption2)
-                    .padding(.top, 2)
-                }
-                .font(.caption)
-            }
+    private func resultCard(title: String, caption: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title).font(.system(size: 13.5, weight: .bold))
+            Text(caption).font(.system(size: 11)).foregroundStyle(.secondary)
         }
-        .padding(12)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.green.opacity(0.10)))
-    }
-
-    private func safetyCaption(count: Int) -> String {
-        let plural = count == 1 ? "volume" : "volumes"
-        if let report = appState.lastReport, !report.dryRun {
-            return "\(count) data \(plural) untouched, as always."
-        }
-        return "\(count) data \(plural) (databases, project files) are read-only to Reclaim. "
-            + "It has no delete button for them — by design."
+        .background(RoundedRectangle(cornerRadius: 9).fill(tint))
+        .padding(.horizontal, 11)
+        .padding(.top, 2)
+        .padding(.bottom, 6)
     }
 
     // MARK: - Start Colima
@@ -253,9 +393,9 @@ struct DetailPanelView: View {
     private var startColimaSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Docker isn’t running", systemImage: "exclamationmark.triangle")
-                .font(.subheadline.weight(.semibold))
+                .font(.system(size: 12.5, weight: .semibold))
             Text("Colima, OrbStack, Rancher Desktop, and Docker Desktop were all unreachable.")
-                .font(.caption)
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
             Button {
@@ -269,7 +409,7 @@ struct DetailPanelView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(CTAButtonStyle())
             .disabled(appState.isStartingColima)
 
             if !appState.logLines.isEmpty {
@@ -278,38 +418,93 @@ struct DetailPanelView: View {
         }
     }
 
-    // MARK: - Footer
+    // MARK: - Footer (`.frow` + `.fine`)
 
     private var footerSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Button("Refresh") {
-                    Task { await appState.refresh() }
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                Task { await appState.refresh() }
+            } label: {
+                HStack {
+                    Text("Refresh").font(.system(size: 13))
+                    if appState.isRefreshing {
+                        ProgressView().controlSize(.small)
+                    }
+                    Spacer()
                 }
-                Spacer()
-                Button("Quit") {
-                    NSApplication.shared.terminate(nil)
-                }
+                .frame(height: 30)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 11)
+
+            Button {
+                NSApplication.shared.terminate(nil)
+            } label: {
+                HStack {
+                    Text("Quit Reclaim").font(.system(size: 13))
+                    Spacer()
+                    Text("⌘Q")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+                .frame(height: 30)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut("q")
+            .padding(.horizontal, 11)
+
             if !finePrint.isEmpty {
                 Text(finePrint)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 11)
+                    .padding(.top, 2)
+                    .padding(.bottom, 8)
             }
         }
     }
 
-    /// Backend name moves here from the header (docs/design/copy.html: "Watching: Colima ...
-    /// laymen don't need it above the fold"), joined with the one-time slow-build note when
-    /// applicable.
+    /// "Watching Colima · Cleaned 3 days ago, freed 12.4 GB" (docs/design/panel.html `.fine`),
+    /// joined with the one-time slow-build note when applicable.
     private var finePrint: String {
         var parts: [String] = []
         if let backend = appState.detected {
-            parts.append("Watching: \(backend.backend.displayName)")
+            parts.append("Watching \(backend.backend.displayName)")
+        }
+        if let last = appState.history.first {
+            parts.append("Cleaned \(relativeDateText(last.date)), freed \(appFormatBytes(last.hostDelta))")
         }
         if appState.showSlowBuildNote {
-            parts.append("First Docker build after a cleanup can be slower while Docker warms back up.")
+            parts.append("First build after a cleanup can be slower while Docker warms back up.")
         }
         return parts.joined(separator: " · ")
+    }
+
+    private func relativeDateText(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+/// The CTA's own button style (matches `.cta`/`.cta:active` in panel.html): full-width, solid
+/// fill, radius 8 — a tinted-background stock `ButtonStyle`, not a custom-chrome control.
+struct CTAButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 13, weight: .semibold))
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .foregroundStyle(.white)
+            .background(RoundedRectangle(cornerRadius: 8).fill(fill(configuration)))
+    }
+
+    private func fill(_ configuration: Configuration) -> Color {
+        guard isEnabled else { return Palette.ctaFill.opacity(0.5) }
+        return configuration.isPressed ? Palette.ctaPressedFill : Palette.ctaFill
     }
 }

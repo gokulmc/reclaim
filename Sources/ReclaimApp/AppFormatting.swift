@@ -20,6 +20,34 @@ func appFormatBytesWhole(_ bytes: Int64) -> String {
     format(bytes, maxDecimals: 0)
 }
 
+/// A byte value split into its bare number and its unit suffix, so a caller can render them at
+/// two different sizes on one baseline (docs/design/panel.html `.hero`: `28px` number +
+/// `14px` "GB free" unit, baseline-aligned) — `appFormatBytes` returns those pre-joined
+/// ("53.7 GB"), which can't be restyled per-piece.
+struct ByteSplit {
+    let value: String
+    let unit: String
+}
+
+func appFormatBytesSplit(_ bytes: Int64) -> ByteSplit {
+    let magnitude = abs(bytes)
+    let units: [(threshold: Double, suffix: String)] = [
+        (1024 * 1024 * 1024 * 1024, "TB"),
+        (1024 * 1024 * 1024, "GB"),
+        (1024 * 1024, "MB"),
+        (1024, "KB")
+    ]
+    for unit in units where Double(magnitude) >= unit.threshold {
+        let value = Double(bytes) / unit.threshold
+        var text = String(format: "%.1f", value)
+        if text.hasSuffix(".0") {
+            text.removeLast(2)
+        }
+        return ByteSplit(value: text, unit: unit.suffix)
+    }
+    return ByteSplit(value: "\(bytes)", unit: "B")
+}
+
 private func format(_ bytes: Int64, maxDecimals: Int) -> String {
     let magnitude = abs(bytes)
     let units: [(threshold: Double, suffix: String)] = [

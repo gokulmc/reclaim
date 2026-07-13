@@ -1,151 +1,227 @@
-<!-- @dsCard group="Reclaim" name="Panel — plain-language redesign" subtitle="One junk number, big friendly button, safety strip — light & dark" -->
-<meta charset="utf-8">
+<!-- @dsCard group="Reclaim" name="Panel — v4 MemBar-grade" subtitle="Rounded hero, health pill, Docker footprint stack-bar, itemised rows — light & dark" width="760" height="720" -->
 <style>
-  :root { color-scheme: light dark; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
-         background:#f2f2f7; padding:28px; }
-  h1 { font-size:15px; font-weight:700; margin-bottom:4px; }
-  .note { font-size:12px; color:#6e6e73; margin-bottom:20px; max-width:760px; line-height:1.5; }
-  .row { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+    background:linear-gradient(150deg,#a5aec0 0%,#77839a 100%);
+    display:flex; gap:44px; justify-content:center; align-items:flex-start;
+    padding:36px; -webkit-font-smoothing:antialiased;
+  }
+  .panel {
+    width:320px; border-radius:13px; padding:6px;
+    box-shadow:0 16px 48px rgba(0,0,0,.32), 0 1px 3px rgba(0,0,0,.18), inset 0 0 0 .5px rgba(255,255,255,.12);
+  }
+  .light { background:rgba(248,248,250,.95); color:#1d1d1f; }
+  .dark  { background:rgba(32,32,36,.95); color:#f2f2f4; }
 
-  /* ---- panel chrome ---- */
-  .panel { width:380px; border-radius:12px; padding:16px; font-size:13px;
-           box-shadow:0 10px 30px rgba(0,0,0,.18), 0 0 0 .5px rgba(0,0,0,.12); }
-  .panel.light { background:#f5f5f7; color:#1d1d1f; }
-  .panel.dark  { background:#2a2a2d; color:#f5f5f7; box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 0 .5px rgba(255,255,255,.14); }
-  .panel .sec  { color:#6e6e73; } .panel.dark .sec { color:#98989d; }
-  .hr { height:1px; background:rgba(0,0,0,.09); margin:13px 0; } .dark .hr { background:rgba(255,255,255,.12); }
+  /* ---------- header ---------- */
+  .header { padding:11px 11px 12px; }
+  .toprow { display:flex; align-items:flex-start; }
+  .brand { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; }
+  .light .brand { color:rgba(0,0,0,.5); } .dark .brand { color:rgba(255,255,255,.5); }
+  .brand svg { display:block; }
+  .hero { display:flex; align-items:baseline; gap:6px; margin-top:9px; }
+  .hero .num { font-family:ui-rounded,-apple-system,sans-serif; font-size:28px; font-weight:700; letter-spacing:-.5px; line-height:1; font-variant-numeric:tabular-nums; }
+  .hero .unit { font-size:14px; font-weight:600; } .light .hero .unit { color:rgba(0,0,0,.45);} .dark .hero .unit{color:rgba(255,255,255,.5);}
+  .sub { margin-top:5px; font-size:12px; } .light .sub{color:rgba(0,0,0,.5);} .dark .sub{color:rgba(255,255,255,.55);}
+  .sub b { font-weight:600; font-variant-numeric:tabular-nums; }
+  .hright { margin-left:auto; }
+  .pill { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; }
+  .pill .pd { width:6px; height:6px; border-radius:3px; }
+  .pill.ok { background:rgba(52,199,89,.16); color:#248a3d; } .pill.ok .pd { background:#34c759; }
+  .dark .pill.ok { background:rgba(48,209,88,.20); color:#30d158; } .dark .pill.ok .pd { background:#30d158; }
 
-  /* header */
-  .hdr { display:flex; align-items:center; gap:7px; font-weight:700; font-size:14px; }
-  .free { font-size:22px; font-weight:700; letter-spacing:-.3px; margin-top:8px; }
-  .free small { font-size:12px; font-weight:500; }
-  .bar { height:5px; border-radius:3px; background:rgba(120,120,128,.2); margin-top:7px; overflow:hidden; }
-  .bar i { display:block; height:100%; width:88%; border-radius:3px; background:linear-gradient(90deg,#30b0c7,#0a84ff); }
+  /* ---------- Docker footprint stack-bar ---------- */
+  .foot-hd { display:flex; align-items:baseline; margin:14px 0 7px; }
+  .foot-hd .t { font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .light .foot-hd .t { color:rgba(0,0,0,.35);} .dark .foot-hd .t{color:rgba(255,255,255,.35);}
+  .foot-hd .amt { margin-left:auto; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .stackbar { display:flex; height:6px; border-radius:3px; overflow:hidden; }
+  .light .stackbar{ background:rgba(0,0,0,.07);} .dark .stackbar{background:rgba(255,255,255,.09);}
+  .s-cache{background:#0a84ff;} .s-img{background:#5e5ce6;} .s-cont{background:#ff9f0a;} .s-vol{background:#34c759;}
+  .legend { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; font-size:10.5px; }
+  .light .legend{color:rgba(0,0,0,.5);} .dark .legend{color:rgba(255,255,255,.5);}
+  .legend b { font-weight:600; font-variant-numeric:tabular-nums; }
+  .dot { display:inline-block; width:6px; height:6px; border-radius:3px; margin-right:4px; vertical-align:1px; }
 
-  /* hero junk card */
-  .hero { border-radius:10px; padding:12px; background:rgba(10,132,255,.09); }
-  .dark .hero { background:rgba(10,132,255,.16); }
-  .hero b { font-size:15px; }
-  .hero p { font-size:12px; margin-top:3px; line-height:1.4; }
-  details { margin-top:8px; font-size:12px; }
-  summary { cursor:default; color:#0a84ff; font-weight:600; list-style:none; }
-  summary::before { content:"▸ "; } details[open] summary::before { content:"▾ "; }
-  .drow { display:flex; justify-content:space-between; padding:3px 0 0 14px; }
+  .sep { height:1px; margin:6px 11px; } .light .sep{background:rgba(0,0,0,.08);} .dark .sep{background:rgba(255,255,255,.10);}
+  .sect { padding:8px 11px 4px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .light .sect{color:rgba(0,0,0,.35);} .dark .sect{color:rgba(255,255,255,.35);}
 
-  /* button + toggle */
-  .cta { display:block; width:100%; margin-top:13px; padding:8px 0; border:0; border-radius:7px;
-         background:#0a84ff; color:#fff; font-size:13px; font-weight:600; text-align:center; }
-  .tgl { display:flex; align-items:flex-start; gap:8px; margin-top:10px; font-size:12px; line-height:1.35; }
+  /* ---------- itemised rows ---------- */
+  .row { display:flex; align-items:center; gap:11px; padding:8px 11px; border-radius:8px; }
+  .chip { width:28px; height:28px; border-radius:7px; flex:none; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .c-cache{ background:rgba(10,132,255,.15);} .c-img{background:rgba(94,92,230,.16);} .c-cont{background:rgba(255,159,10,.16);} .c-vol{background:rgba(52,199,89,.16);}
+  .mid { flex:1; min-width:0; }
+  .l1 { display:flex; align-items:baseline; gap:8px; }
+  .name { font-size:13px; font-weight:500; }
+  .size { margin-left:auto; font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .light .size{color:rgba(0,0,0,.85);} .dark .size{color:rgba(255,255,255,.9);}
+  .desc { font-size:11px; margin-top:2px; } .light .desc{color:rgba(0,0,0,.48);} .dark .desc{color:rgba(255,255,255,.5);}
+  .tag { font-size:9.5px; font-weight:700; padding:1.5px 6px; border-radius:5px; letter-spacing:.2px; }
+  .tag.clean { background:rgba(10,132,255,.16); color:#0a72e0; } .dark .tag.clean{color:#4da3ff;}
+  .tag.safe  { background:rgba(52,199,89,.18); color:#248a3d; } .dark .tag.safe{color:#5be07a;}
+  .tag.none  { background:rgba(120,120,128,.18); } .light .tag.none{color:rgba(0,0,0,.4);} .dark .tag.none{color:rgba(255,255,255,.45);}
+
+  /* ---------- CTA block ---------- */
+  .ctawrap { padding:4px 11px 2px; }
+  .ready { display:flex; align-items:baseline; margin-bottom:8px; }
+  .ready b { font-size:13.5px; font-weight:700; } .ready span { margin-left:auto; font-size:11px; }
+  .light .ready span{color:rgba(0,0,0,.45);} .dark .ready span{color:rgba(255,255,255,.5);}
+  .cta { display:block; width:100%; padding:8px 0; border:0; border-radius:8px; background:#0a84ff; color:#fff; font-size:13px; font-weight:600; text-align:center; }
+  .cta:active { background:#0060df; }
+  .tgl { display:flex; align-items:flex-start; gap:9px; margin-top:11px; }
   .sw { flex:none; width:32px; height:19px; border-radius:10px; background:#34c759; position:relative; margin-top:1px; }
-  .sw i { position:absolute; top:1.5px; right:1.5px; width:16px; height:16px; border-radius:8px; background:#fff;
-          box-shadow:0 1px 2px rgba(0,0,0,.25); }
-  .sw.off { background:rgba(120,120,128,.32); } .sw.off i { right:auto; left:1.5px; }
-
-  /* safety strip */
-  .safe { border-radius:10px; padding:10px 12px; background:rgba(52,199,89,.10); font-size:12px; line-height:1.45; }
-  .dark .safe { background:rgba(52,199,89,.15); }
-  .safe b { display:flex; align-items:center; gap:6px; font-size:12px; }
+  .sw i { position:absolute; top:1.5px; right:1.5px; width:16px; height:16px; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.25); }
+  .sw.off { background:rgba(120,120,128,.32);} .sw.off i{right:auto;left:1.5px;}
+  .tgl .tt b { font-size:12.5px; font-weight:600; } .tgl .tt p { font-size:11px; margin-top:1px; }
+  .light .tgl .tt p{color:rgba(0,0,0,.48);} .dark .tgl .tt p{color:rgba(255,255,255,.5);}
 
   /* result */
-  .res { border-radius:10px; padding:10px 12px; background:rgba(52,199,89,.14); }
-  .res b { font-size:14px; } .res p { font-size:11.5px; margin-top:2px; }
+  .res { margin:2px 11px; border-radius:9px; padding:10px 12px; background:rgba(52,199,89,.14); }
+  .res b { font-size:13.5px; font-weight:700; } .res p { font-size:11px; margin-top:3px; }
+  .light .res p{color:rgba(0,0,0,.55);} .dark .res p{color:rgba(255,255,255,.6);}
 
-  .line { display:flex; justify-content:space-between; align-items:center; font-size:12px; }
-  .foot { display:flex; justify-content:space-between; font-size:12px; }
-  .foot span { color:#0a84ff; }
-  .fine { font-size:10.5px; margin-top:9px; }
+  /* footer */
+  .frow { display:flex; align-items:center; height:30px; padding:0 11px; border-radius:7px; font-size:13px; }
+  .frow .kbd { margin-left:auto; font-size:12px; } .light .frow .kbd{color:rgba(0,0,0,.35);} .dark .frow .kbd{color:rgba(255,255,255,.4);}
+  .fine { padding:2px 11px 4px; font-size:10.5px; } .light .fine{color:rgba(0,0,0,.4);} .dark .fine{color:rgba(255,255,255,.4);}
+  .cap { position:absolute; bottom:12px; left:0; right:0; text-align:center; font-size:11px; color:rgba(255,255,255,.9); }
+  a.link { color:#0a84ff; text-decoration:none; }
 </style>
 
-<h1>Reclaim panel — plain-language redesign</h1>
-<p class="note">What changed vs. v1: the four Docker-jargon cards (Build Cache / Images / Containers / Volumes)
-collapse into <b>one plain sentence with one number</b> — "Docker is sitting on X of junk" — with the technical
-split tucked behind "What exactly?". "Preview (dry run)" becomes <b>"Show me first"</b>. The volumes table becomes a
-green <b>"Your data is safe"</b> strip. Backend name moves to the footer fine print. Same stock native controls —
-no custom chrome.</p>
-
-<div class="row">
-
-<!-- ============ LIGHT ============ -->
+<!-- ============ LIGHT · idle ============ -->
 <div class="panel light">
-  <div class="hdr">⛭ Reclaim</div>
-  <div class="free">53.7 GB <small class="sec">free on your Mac</small></div>
-  <div class="bar"><i></i></div>
+  <div class="header">
+    <div class="toprow">
+      <div>
+        <div class="brand">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>
+          Reclaim
+        </div>
+        <div class="hero"><span class="num">53.7</span><span class="unit">GB free</span></div>
+        <div class="sub">of <b>460 GB</b> · <b>88%</b> used</div>
+      </div>
+      <div class="hright"><span class="pill ok"><span class="pd"></span>Healthy</span></div>
+    </div>
 
-  <div class="hr"></div>
-
-  <div class="hero">
-    <b>Docker is sitting on ≈ 1.5 GB of junk</b>
-    <p class="sec">Old build leftovers and unused downloads. Safe to clear — Docker recreates
-    anything it needs later.</p>
-    <details open>
-      <summary>What exactly?</summary>
-      <div class="drow"><span class="sec">Build leftovers</span><span>652 MB</span></div>
-      <div class="drow"><span class="sec">Unused app images</span><span>869 MB</span></div>
-      <div class="drow"><span class="sec">Finished containers</span><span>0 B</span></div>
-    </details>
+    <div class="foot-hd"><span class="t">Docker is using</span><span class="amt">4.5 GB</span></div>
+    <div class="stackbar">
+      <div class="s-cache" style="width:15%"></div><div class="s-img" style="width:53%"></div><div class="s-cont" style="width:0%"></div><div class="s-vol" style="width:32%"></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot s-cache"></span>Build cache <b>652 MB</b></span>
+      <span><span class="dot s-img"></span>Images <b>2.4 GB</b></span>
+      <span><span class="dot s-vol"></span>Your data <b>3.0 GB</b></span>
+    </div>
   </div>
 
-  <button class="cta">See what I’d get back</button>
-  <div class="tgl"><span class="sw"><i></i></span>
-    <span><b>Show me first</b><br><span class="sec">Nothing is deleted until you turn this off and run it again.</span></span>
+  <div class="sep"></div>
+  <div class="sect">Safe to clear</div>
+
+  <div class="row">
+    <div class="chip c-cache">🧱</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Build leftovers</span><span class="size">652 MB</span></div>
+      <div class="desc">Scraps from building images — rebuilt automatically</div>
+    </div>
+    <span class="tag clean">CLEANABLE</span>
+  </div>
+  <div class="row">
+    <div class="chip c-img">📦</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Unused app images</span><span class="size">869 MB</span></div>
+      <div class="desc">Downloads nothing is running right now</div>
+    </div>
+    <span class="tag clean">CLEANABLE</span>
+  </div>
+  <div class="row">
+    <div class="chip c-cont">⏹️</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Finished containers</span><span class="size">0 B</span></div>
+      <div class="desc">Programs that already exited</div>
+    </div>
+    <span class="tag none">NONE</span>
   </div>
 
-  <div class="hr"></div>
-
-  <div class="safe">
-    <b>🔒 Your data is safe</b>
-    <span class="sec">11 data volumes (databases, project files) are read-only to Reclaim.
-    It has no delete button for them — by design.</span>
+  <div class="sep"></div>
+  <div class="sect">Protected — never touched</div>
+  <div class="row">
+    <div class="chip c-vol">🔒</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Your data</span><span class="size">3.0 GB</span></div>
+      <div class="desc">11 volumes — databases &amp; project files</div>
+    </div>
+    <span class="tag safe">SAFE</span>
   </div>
 
-  <div class="hr"></div>
-
-  <div class="line"><span>Last cleanup: 3 days ago</span><span class="sec">12.4 GB returned</span></div>
-  <div class="tgl"><span class="sw off"><i></i></span>
-    <span><b>Clean up automatically every week</b><br><span class="sec">Sundays at 10:00 — you’ll get a notification with the result.</span></span>
+  <div class="sep"></div>
+  <div class="ctawrap">
+    <div class="ready"><b>Ready to free ≈ 1.5 GB</b><span>data never touched</span></div>
+    <button class="cta">See what I’d get back</button>
+    <div class="tgl">
+      <span class="sw"><i></i></span>
+      <div class="tt"><b>Show me first</b><p>Nothing is deleted until you turn this off and run it again.</p></div>
+    </div>
   </div>
 
-  <div class="hr"></div>
-  <div class="foot"><span>Refresh</span><span>Quit</span></div>
-  <div class="fine sec">Watching: Colima</div>
+  <div class="sep"></div>
+  <div class="frow"><span>Refresh</span></div>
+  <div class="frow"><span>Quit Reclaim</span><span class="kbd">⌘Q</span></div>
+  <div class="fine">Watching Colima · Cleaned 3 days ago, freed 12.4 GB</div>
 </div>
 
-<!-- ============ DARK (result state) ============ -->
+<!-- ============ DARK · after a real run ============ -->
 <div class="panel dark">
-  <div class="hdr">⛭ Reclaim</div>
-  <div class="free">53.7 GB <small class="sec">free on your Mac</small></div>
-  <div class="bar"><i></i></div>
-
-  <div class="hr"></div>
+  <div class="header">
+    <div class="toprow">
+      <div>
+        <div class="brand">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>
+          Reclaim
+        </div>
+        <div class="hero"><span class="num">53.7</span><span class="unit">GB free</span></div>
+        <div class="sub"><b>+12.4 GB</b> just returned · 41.3 → 53.7</div>
+      </div>
+      <div class="hright"><span class="pill ok"><span class="pd"></span>Healthy</span></div>
+    </div>
+  </div>
 
   <div class="res">
     <b>🎉 12.4 GB returned to your Mac</b>
-    <p class="sec">Free space went 41.3 GB → 53.7 GB. That’s the real number, measured on your disk.</p>
+    <p>The real number, measured on your disk — not Docker’s estimate.</p>
   </div>
 
-  <div style="margin-top:10px; border-radius:8px; background:rgba(0,0,0,.35); padding:8px 10px; font-family:ui-monospace,Menlo,monospace; font-size:10.5px; line-height:1.6;" class="sec">
-    Step 1 of 3 — clearing build leftovers… done (652 MB)<br>
-    Step 2 of 3 — removing unused app images… done (869 MB)<br>
-    Step 3 of 3 — handing the space back to macOS…<br>
-    &nbsp;&nbsp;this one takes a minute — Docker’s disk is being shrunk
+  <div class="sect">What Docker is using now</div>
+  <div class="row">
+    <div class="chip c-cache">🧱</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Build leftovers</span><span class="size">0 B</span></div>
+      <div class="desc">All cleared</div>
+    </div>
+    <span class="tag none">CLEAR</span>
+  </div>
+  <div class="row">
+    <div class="chip c-img">📦</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Unused app images</span><span class="size">0 B</span></div>
+      <div class="desc">All cleared · 1.6 GB still in use</div>
+    </div>
+    <span class="tag none">CLEAR</span>
+  </div>
+  <div class="row">
+    <div class="chip c-vol">🔒</div>
+    <div class="mid">
+      <div class="l1"><span class="name">Your data</span><span class="size">3.0 GB</span></div>
+      <div class="desc">11 volumes — untouched, as always</div>
+    </div>
+    <span class="tag safe">SAFE</span>
   </div>
 
-  <div class="tgl" style="margin-top:11px"><span class="sw off"><i></i></span>
-    <span><b>Show me first</b><br><span class="sec">Off — the next run cleans for real.</span></span>
-  </div>
-
-  <div class="hr"></div>
-
-  <div class="safe">
-    <b>🔒 Your data is safe</b>
-    <span class="sec">11 data volumes untouched, as always.</span>
-  </div>
-
-  <div class="hr"></div>
-  <div class="foot"><span>Refresh</span><span>Quit</span></div>
-  <div class="fine sec">Watching: Colima · First build after a cleanup can be slower while Docker warms back up.</div>
+  <div class="sep"></div>
+  <div class="frow"><span>Refresh</span></div>
+  <div class="frow"><span>Quit Reclaim</span><span class="kbd">⌘Q</span></div>
+  <div class="fine">Watching Colima · First build after a cleanup can be slower while Docker warms back up.</div>
 </div>
 
-</div>
+<div class="cap">320 pt panel · rounded hero · health pill · Docker-footprint stack-bar with legend · itemised rows with CLEANABLE / SAFE tags — same visual system as MemBar</div>
