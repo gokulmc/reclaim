@@ -50,6 +50,12 @@ struct DetailPanelView: View {
                         .padding(11)
                 }
 
+                // Dev-tool caches (M1, docs/design/caches-section.html) — backend-independent,
+                // so this renders even when Docker/Colima is down. Purely additive: collapsed
+                // by default, wrapped in the same `divider` used everywhere else in this view.
+                divider
+                CacheSectionView(caches: appState.caches)
+
                 divider
                 VStack(alignment: .leading, spacing: 10) {
                     HistorySectionView()

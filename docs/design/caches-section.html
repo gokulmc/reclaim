@@ -1,0 +1,113 @@
+<!-- @dsCard group="Reclaim" name="Dev-tool caches section (additive)" subtitle="Collapsed by default (panel undisturbed) + expanded per-app selection — light & dark" width="760" height="720" -->
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+    background:linear-gradient(150deg,#a5aec0 0%,#77839a 100%); display:flex; gap:40px; flex-wrap:wrap;
+    justify-content:center; align-items:flex-start; padding:34px; -webkit-font-smoothing:antialiased; }
+  .col { display:flex; flex-direction:column; gap:9px; align-items:center; }
+  .cap { color:#fff; font-size:12px; font-weight:600; opacity:.95; }
+  .panel { width:320px; border-radius:13px; padding:6px; box-shadow:0 16px 48px rgba(0,0,0,.32), inset 0 0 0 .5px rgba(255,255,255,.12); }
+  .light { background:rgba(248,248,250,.96); color:#1d1d1f; }
+  .dark  { background:rgba(32,32,36,.96); color:#f2f2f4; }
+  .sep { height:1px; margin:6px 11px; } .light .sep{background:rgba(0,0,0,.08);} .dark .sep{background:rgba(255,255,255,.1);}
+  .sect { padding:8px 11px 4px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .light .sect{color:rgba(0,0,0,.35);} .dark .sect{color:rgba(255,255,255,.35);}
+  .dim { font-size:11px; } .light .dim{color:rgba(0,0,0,.48);} .dark .dim{color:rgba(255,255,255,.5);}
+
+  /* faux existing content above (greyed to signal "unchanged") */
+  .ghost { padding:10px 12px; opacity:.5; }
+  .ghost .h { display:flex; align-items:baseline; gap:6px; }
+  .ghost .num { font-family:ui-rounded,-apple-system,sans-serif; font-size:24px; font-weight:700; }
+  .ghost .u { font-size:12px; font-weight:600; } .light .ghost .u{color:rgba(0,0,0,.45);} .dark .ghost .u{color:rgba(255,255,255,.5);}
+  .ghost .btn { margin-top:8px; height:30px; border-radius:8px; background:#0a84ff; opacity:.9; }
+
+  /* disclosure header row */
+  .disc { display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:8px; cursor:default; }
+  .disc:hover { background:rgba(120,120,128,.08); }
+  .tri { font-size:11px; width:10px; } .light .tri{color:rgba(0,0,0,.4);} .dark .tri{color:rgba(255,255,255,.45);}
+  .disc .t { font-size:12.5px; font-weight:600; }
+  .disc .sz { margin-left:auto; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .light .disc .sz{color:rgba(0,0,0,.55);} .dark .disc .sz{color:rgba(255,255,255,.55);}
+
+  /* selectable rows */
+  .row { display:flex; align-items:center; gap:10px; padding:7px 11px 7px 14px; border-radius:8px; }
+  .ck { width:17px; height:17px; border-radius:5px; flex:none; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; }
+  .ck.on { background:#0a84ff; } .ck.off { background:transparent; box-shadow:inset 0 0 0 1.5px rgba(120,120,128,.5); }
+  .chip { width:26px; height:26px; border-radius:7px; flex:none; display:flex; align-items:center; justify-content:center; font-size:13px; background:rgba(94,92,230,.16); }
+  .mid { flex:1; min-width:0; } .mid .n { font-size:12.5px; font-weight:500; } .mid .d { font-size:10.5px; margin-top:1px; }
+  .light .mid .d{color:rgba(0,0,0,.45);} .dark .mid .d{color:rgba(255,255,255,.5);}
+  .sz2 { font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; } .light .sz2{color:rgba(0,0,0,.8);} .dark .sz2{color:rgba(255,255,255,.85);}
+  .tag { font-size:9px; font-weight:700; padding:1.5px 5px; border-radius:5px; background:rgba(10,132,255,.16); color:#0a72e0; margin-left:8px; }
+  .dark .tag{color:#4da3ff;}
+
+  /* nested per-app group */
+  .nest { padding:6px 11px 4px 26px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+  .light .nest{color:rgba(0,0,0,.3);} .dark .nest{color:rgba(255,255,255,.32);}
+  .app { display:flex; align-items:center; gap:9px; padding:5px 11px 5px 26px; }
+  .app .n { font-size:12px; } .app .sz3 { margin-left:auto; font-size:11.5px; font-variant-numeric:tabular-nums; }
+  .light .app .sz3{color:rgba(0,0,0,.55);} .dark .app .sz3{color:rgba(255,255,255,.55);}
+
+  /* action bar */
+  .bar { padding:8px 11px 4px; }
+  .barrow { display:flex; align-items:center; gap:8px; }
+  .link { font-size:12px; font-weight:600; color:#0a84ff; }
+  .spacer { flex:1; }
+  .cta { display:block; width:100%; margin-top:9px; padding:8px 0; border-radius:8px; background:#0a84ff; color:#fff; font-size:13px; font-weight:600; text-align:center; }
+  .tgl { display:flex; align-items:flex-start; gap:9px; margin-top:10px; }
+  .sw { flex:none; width:32px; height:19px; border-radius:10px; background:#34c759; position:relative; margin-top:1px; }
+  .sw i { position:absolute; top:1.5px; right:1.5px; width:16px; height:16px; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.25); }
+  .tt b { font-size:12px; font-weight:600; } .tt p { font-size:10.5px; margin-top:1px; }
+  .light .tt p{color:rgba(0,0,0,.48);} .dark .tt p{color:rgba(255,255,255,.5);}
+</style>
+
+<!-- ===================== COLLAPSED (default) ===================== -->
+<div class="col">
+  <div class="cap">Collapsed by default — existing panel untouched</div>
+  <div class="panel light">
+    <div class="ghost">
+      <div class="sect" style="padding:0 0 4px">Docker · unchanged</div>
+      <div class="h"><span class="num">6.9</span><span class="u">GB free</span></div>
+      <div class="btn"></div>
+    </div>
+    <div class="sep"></div>
+    <div class="sect">Reclaimed from Docker · rows unchanged</div>
+    <div class="ghost" style="padding:4px 12px"><div class="dim">🧱 Build leftovers · 📦 Unused images · 🔒 Your data …</div></div>
+    <div class="sep"></div>
+    <!-- the ONE new thing at rest: a collapsed disclosure -->
+    <div class="disc"><span class="tri">▸</span><span class="t">Dev tool caches</span><span class="sz">13.5 GB</span></div>
+    <div class="sep"></div>
+    <div class="sect" style="opacity:.5">History · Schedule · Quit …</div>
+  </div>
+</div>
+
+<!-- ===================== EXPANDED ===================== -->
+<div class="col">
+  <div class="cap">Expanded — per-app selection, nothing pre-ticked</div>
+  <div class="panel dark">
+    <div class="disc"><span class="tri">▾</span><span class="t">Dev tool caches</span><span class="sz">13.5 GB</span></div>
+
+    <div class="row"><span class="ck off"></span><span class="chip">📦</span><div class="mid"><div class="n">npm cache</div><div class="d">Downloaded packages npm can re-fetch</div></div><span class="sz2">1.5 GB</span></div>
+    <div class="row"><span class="ck off"></span><span class="chip">📦</span><div class="mid"><div class="n">pnpm store</div><div class="d">Re-downloads on next install</div></div><span class="sz2">1.1 GB</span></div>
+    <div class="row"><span class="ck off"></span><span class="chip" style="background:rgba(10,132,255,.15)">🔨</span><div class="mid"><div class="n">Xcode DerivedData</div><div class="d">Rebuilt on next build</div></div><span class="sz2">340 MB</span></div>
+    <div class="row"><span class="ck off"></span><span class="chip" style="background:rgba(255,159,10,.16)">🍺</span><div class="mid"><div class="n">Homebrew cache</div><div class="d">Re-downloaded on next install</div></div><span class="sz2">22 MB</span></div>
+
+    <!-- per-app fan-out of ~/Library/Caches -->
+    <div class="disc" style="padding-left:14px"><span class="tri">▾</span><span class="t" style="font-weight:600">App caches (~/Library/Caches)</span><span class="sz">9.6 GB</span></div>
+    <div class="nest">pick which apps’ caches to clear</div>
+    <div class="app"><span class="ck off"></span><span class="n">com.google.Chrome</span><span class="sz3">3.1 GB</span></div>
+    <div class="app"><span class="ck on" style="background:#0a84ff">✓</span><span class="n">com.spotify.client</span><span class="sz3">2.4 GB</span></div>
+    <div class="app"><span class="ck off"></span><span class="n">com.apple.Safari</span><span class="sz3">1.2 GB</span></div>
+    <div class="app"><span class="ck off"></span><span class="n">com.tinyspeck.slackmacgap</span><span class="sz3">880 MB</span></div>
+    <div class="app dim" style="padding-left:26px; font-size:11px">+ 34 smaller…</div>
+
+    <div class="sep"></div>
+    <div class="bar">
+      <div class="barrow"><span class="link">Select all safe</span><span class="spacer"></span><span class="dim">1 selected · ≈ 2.4 GB</span></div>
+      <div class="cta">See what I’d free</div>
+      <div class="tgl"><span class="sw"><i></i></span><div class="tt"><b>Show me first</b><p>Nothing is deleted until you turn this off and run it again.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="cap" style="width:100%; text-align:center; opacity:.9">Additive section appended below the Docker block · reuses the same rows / chips / tags / CTA · ~/Library/Caches fans out per-app · dry-run default</div>

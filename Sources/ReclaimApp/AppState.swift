@@ -16,6 +16,18 @@ final class AppState: ObservableObject {
     @Published private(set) var diskUsage: DiskUsage?
     @Published private(set) var isRefreshing = false
 
+    // MARK: - Dev-tool caches (M1: read-only visibility, see docs/design/caches-section.html)
+
+    /// Backend-independent — populated in `refresh()` regardless of whether a Docker backend
+    /// was detected, so the "Dev tool caches" section still renders when Docker is down.
+    @Published private(set) var caches: [ScannedCache] = []
+
+    /// Sum of every scanned cache (single-directory tools + all per-app `~/Library/Caches`
+    /// children) — the number `CacheSectionView` shows next to "Dev tool caches" at rest.
+    var cachesTotalBytes: Int64 {
+        caches.reduce(0) { $0 + $1.sizeBytes }
+    }
+
     // MARK: - Clean run
 
     /// Dry-run is ON by default (SPEC.md §2.4: dry-run must be the default).
@@ -104,6 +116,13 @@ final class AppState: ObservableObject {
         if let stat = await Task.detached(priority: .utility, operation: { try? DiskProbe.stat() }).value {
             diskStat = stat
         }
+
+        // Dev-tool caches live on disk regardless of whether a Docker backend is running, so
+        // this is scanned unconditionally — unlike `diskUsage` below, it never depends on
+        // `detected`.
+        caches = await Task.detached(priority: .utility) { () -> [ScannedCache] in
+            CacheScanner().scan(CacheCatalog.default())
+        }.value
 
         let detectedBackends = await Task.detached(priority: .utility) { BackendDetector.detect() }.value
         detected = detectedBackends.first
