@@ -20,23 +20,28 @@ struct ItemRow: View {
             }
             .frame(width: 28, height: 28)
 
+            // Name + description take all remaining width so names never truncate against
+            // the size/tag; the size and tag stack in a fixed trailing column.
             VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(name)
-                        .font(.system(size: 13, weight: .medium))
-                        .lineLimit(1)
-                    Spacer(minLength: 4)
-                    Text(appFormatBytes(size))
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(.primary)
-                }
+                Text(name)
+                    .font(.system(size: 13, weight: .medium))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(description)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            TagView(text: tagText, foreground: tagForeground, background: tagBackground)
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(appFormatBytes(size))
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                TagView(text: tagText, foreground: tagForeground, background: tagBackground)
+            }
+            .fixedSize()
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 11)
