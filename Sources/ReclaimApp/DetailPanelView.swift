@@ -21,10 +21,9 @@ struct DetailPanelView: View {
 
                 if appState.detected != nil {
                     if let df = appState.diskUsage {
-                        divider
-
-                        itemizedSections(df: df)
-
+                        // Primary action first, above the fold — the whole point of the app is
+                        // one click, so the Reclaim button must be visible without scrolling.
+                        // The itemised breakdown follows as supporting detail.
                         divider
                         ctaSection(df: df)
 
@@ -37,6 +36,9 @@ struct DetailPanelView: View {
                                 .padding(.top, 6)
                                 .padding(.bottom, 8)
                         }
+
+                        divider
+                        itemizedSections(df: df)
                     } else {
                         ProgressView("Checking what Docker is sitting on…")
                             .padding(16)
