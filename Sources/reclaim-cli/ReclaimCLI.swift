@@ -16,6 +16,7 @@ struct ReclaimCLI: AsyncParsableCommand {
         version: "0.2.0",
         subcommands: [
             StatusCommand.self,
+            CachesCommand.self,
             CleanCommand.self,
             TrimCommand.self,
             VolumesCommand.self,
