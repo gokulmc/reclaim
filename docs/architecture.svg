@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="abg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f2f6fc"/>
+    </linearGradient>
+    <marker id="aarw" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect x="3" y="3" width="914" height="514" rx="16" fill="url(#abg)" stroke="#e2e8f0"/>
+
+  <text x="40" y="50" font-size="23" font-weight="700" fill="#0f172a">Architecture</text>
+  <text x="40" y="77" font-size="13.5" fill="#64748b">One pure-Swift core, <tspan font-weight="700" fill="#475569">ReclaimKit</tspan>, behind both the menu bar app and the CLI. No UI code touches the engine.</text>
+
+  <!-- ===== consumers ===== -->
+  <g>
+    <rect x="120" y="96" width="300" height="56" rx="11" fill="#ffffff" stroke="#c9d8ee"/>
+    <rect x="120" y="96" width="300" height="4" rx="2" fill="#0a84ff"/>
+    <text x="140" y="122" font-size="14.5" font-weight="700" fill="#0f172a">Reclaim.app</text>
+    <text x="140" y="141" font-size="12" fill="#64748b">MenuBarExtra + detail panel · SwiftUI</text>
+
+    <rect x="500" y="96" width="300" height="56" rx="11" fill="#ffffff" stroke="#c9d8ee"/>
+    <rect x="500" y="96" width="300" height="4" rx="2" fill="#5e5ce6"/>
+    <text x="520" y="122" font-size="14.5" font-weight="700" fill="#0f172a">reclaim-cli</text>
+    <text x="520" y="141" font-size="12" fill="#64748b">status · clean · trim · volumes · history</text>
+  </g>
+
+  <line x1="270" y1="152" x2="270" y2="184" stroke="#94a3b8" stroke-width="2" marker-end="url(#aarw)"/>
+  <line x1="650" y1="152" x2="650" y2="184" stroke="#94a3b8" stroke-width="2" marker-end="url(#aarw)"/>
+
+  <!-- ===== ReclaimKit ===== -->
+  <rect x="40" y="186" width="840" height="184" rx="14" fill="#f6faff" stroke="#cfe0f5"/>
+  <text x="62" y="214" font-size="14" font-weight="700" fill="#0f172a">ReclaimKit <tspan font-weight="500" fill="#64748b">— pure Swift package · zero UI · 60 unit tests</tspan></text>
+
+  <!-- row 1 chips -->
+  <g font-size="12.5" font-weight="600" fill="#0f172a">
+    <rect x="64"  y="232" width="180" height="42" rx="9" fill="#ffffff" stroke="#d7e3f2"/>
+    <text x="154" y="258" text-anchor="middle">BackendDetector</text>
+    <rect x="268" y="232" width="180" height="42" rx="9" fill="#ffffff" stroke="#d7e3f2"/>
+    <text x="358" y="258" text-anchor="middle">DockerClient</text>
+    <rect x="472" y="232" width="180" height="42" rx="9" fill="#ffffff" stroke="#d7e3f2"/>
+    <text x="562" y="258" text-anchor="middle">TrimService</text>
+    <rect x="676" y="232" width="180" height="42" rx="9" fill="#ffffff" stroke="#d7e3f2"/>
+    <text x="766" y="258" text-anchor="middle">DiskProbe</text>
+  </g>
+
+  <!-- row 2 chips -->
+  <g font-size="12.5" font-weight="600">
+    <rect x="64" y="286" width="250" height="42" rx="9" fill="#ffffff" stroke="#d7e3f2"/>
+    <text x="189" y="312" text-anchor="middle" fill="#0f172a">Reclaimer <tspan font-weight="500" fill="#64748b">· orchestrates</tspan></text>
+
+    <rect x="330" y="286" width="314" height="42" rx="9" fill="#eafaf0" stroke="#57c87d" stroke-width="1.5"/>
+    <text x="350" y="312" font-size="12" fill="#1a7f37">🔒 SafetyGuard <tspan font-weight="500" fill="#2f8f52">· volume ops unrepresentable</tspan></text>
+
+    <rect x="652" y="286" width="204" height="42" rx="9" fill="#ffffff" stroke="#d7e3f2"/>
+    <text x="754" y="312" text-anchor="middle" fill="#0f172a">HistoryStore</text>
+  </g>
+
+  <text x="62" y="352" font-size="11.5" fill="#8a97a8">Reclaimer runs the pipeline: <tspan fill="#475569" font-weight="600">probe → prune images → prune build cache → fstrim → probe</tspan>, streaming progress + the honest statfs delta.</text>
+
+  <!-- arrows down to externals -->
+  <line x1="358" y1="370" x2="358" y2="408" stroke="#94a3b8" stroke-width="2" marker-end="url(#aarw)"/>
+  <line x1="562" y1="370" x2="562" y2="408" stroke="#94a3b8" stroke-width="2" marker-end="url(#aarw)"/>
+  <line x1="766" y1="370" x2="766" y2="408" stroke="#94a3b8" stroke-width="2" marker-end="url(#aarw)"/>
+
+  <!-- ===== externals ===== -->
+  <g>
+    <rect x="238" y="410" width="240" height="58" rx="11" fill="#ffffff" stroke="#c9d8ee"/>
+    <text x="358" y="435" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">Docker Engine API</text>
+    <text x="358" y="454" font-size="11.5" fill="#64748b" text-anchor="middle">over a Unix socket · no CLI parsing</text>
+
+    <rect x="492" y="410" width="140" height="58" rx="11" fill="#ffffff" stroke="#c9d8ee"/>
+    <text x="562" y="435" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">fstrim</text>
+    <text x="562" y="454" font-size="11.5" fill="#64748b" text-anchor="middle">Process · PATH set</text>
+
+    <rect x="668" y="410" width="196" height="58" rx="11" fill="#ffffff" stroke="#c9d8ee"/>
+    <text x="766" y="435" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle">statfs()</text>
+    <text x="766" y="454" font-size="11.5" fill="#64748b" text-anchor="middle">real host free bytes</text>
+  </g>
+
+  <text x="40" y="500" font-size="12" fill="#64748b">Backends detected by socket + <tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#475569">GET /_ping</tspan>:  Colima · Docker Desktop · OrbStack · Rancher Desktop</text>
+</svg>

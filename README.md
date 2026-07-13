@@ -7,6 +7,10 @@ not just back to the VM.
 
 ## The problem
 
+<p align="center">
+  <img src="docs/how-it-works.svg" alt="How Reclaim works: docker prune frees space inside the VM, but only fstrim (TRIM) returns it to macOS — host free went 6.5 GB to 57 GB on the author's Mac" width="860">
+</p>
+
 Docker on macOS runs inside a Linux VM backed by a sparse disk image. When you run
 `docker system prune`, blocks get freed **inside the VM's filesystem** — but the sparse
 image file on macOS itself does not shrink. Your Mac gets nothing back. The fix is a
@@ -203,10 +207,9 @@ The panel design lives in [`docs/design/panel.html`](docs/design/panel.html).
 
 ## Architecture
 
-```
-MenuBarExtra (SwiftUI)  →  ReclaimKit (pure Swift, no UI)  →  Docker Engine API
-                                                            →  fstrim (shelled out)
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="Reclaim architecture: the Reclaim.app menu bar UI and reclaim-cli both sit on top of ReclaimKit, a pure-Swift core (BackendDetector, DockerClient, TrimService, DiskProbe, Reclaimer, SafetyGuard, HistoryStore) that talks to the Docker Engine API over a Unix socket, shells out to fstrim, and reads host free space via statfs" width="860">
+</p>
 
 **ReclaimKit** is a plain Swift package with no SwiftUI or AppKit imports, so it's
 independently unit-testable and ships as the same logic behind both the menu bar app and

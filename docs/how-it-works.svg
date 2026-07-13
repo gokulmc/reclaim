@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f2f6fc"/>
+    </linearGradient>
+    <marker id="arw" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect x="3" y="3" width="914" height="434" rx="16" fill="url(#bg)" stroke="#e2e8f0"/>
+
+  <text x="40" y="50" font-size="23" font-weight="700" fill="#0f172a">How Reclaim actually returns the space to macOS</text>
+  <text x="40" y="76" font-size="13.5" fill="#64748b">Docker keeps everything in a sparse disk image inside a Linux VM.</text>
+  <text x="40" y="95" font-size="13.5" fill="#64748b">Pruning frees space <tspan font-style="italic">inside the VM</tspan> — but your Mac only gets it back after a TRIM (<tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace">fstrim</tspan>).</text>
+
+  <!-- ============ CARD 1 ============ -->
+  <rect x="44" y="126" width="168" height="152" rx="12" fill="#ffffff" stroke="#d7e3f2"/>
+  <rect x="44" y="126" width="168" height="4" rx="2" fill="#0a84ff"/>
+  <circle cx="72" cy="164" r="15" fill="#0a84ff"/>
+  <text x="72" y="169" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <text x="98" y="169" font-size="15" font-weight="700" fill="#0f172a">Prune</text>
+  <text x="62" y="206" font-size="12" fill="#475569">docker image &amp; build</text>
+  <text x="62" y="224" font-size="12" fill="#475569">cache prune free blocks</text>
+  <text x="62" y="248" font-size="12" font-weight="700" fill="#0a72e0">inside the VM</text>
+
+  <!-- ============ CARD 2 ============ -->
+  <rect x="262" y="126" width="168" height="152" rx="12" fill="#ffffff" stroke="#d7e3f2"/>
+  <rect x="262" y="126" width="168" height="4" rx="2" fill="#0a84ff"/>
+  <circle cx="290" cy="164" r="15" fill="#0a84ff"/>
+  <text x="290" y="169" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+  <text x="316" y="169" font-size="15" font-weight="700" fill="#0f172a">Freed in the VM</text>
+  <text x="280" y="206" font-size="12" fill="#475569">space is free — but only</text>
+  <text x="280" y="224" font-size="12" fill="#475569">in the Linux filesystem.</text>
+  <text x="280" y="248" font-size="12" font-weight="700" fill="#dc2626">Your Mac: nothing back</text>
+
+  <!-- ============ CARD 3 ============ -->
+  <rect x="480" y="126" width="168" height="152" rx="12" fill="#ffffff" stroke="#b9ecc9"/>
+  <rect x="480" y="126" width="168" height="4" rx="2" fill="#34c759"/>
+  <circle cx="508" cy="164" r="15" fill="#34c759"/>
+  <text x="508" y="169" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+  <text x="534" y="169" font-size="15" font-weight="700" fill="#0f172a">TRIM</text>
+  <text x="498" y="206" font-size="12" fill="#475569">fstrim tells the host to</text>
+  <text x="498" y="224" font-size="12" fill="#475569">deallocate those blocks</text>
+  <text x="498" y="248" font-size="12" fill="#475569">in the sparse image</text>
+
+  <!-- ============ CARD 4 ============ -->
+  <rect x="698" y="126" width="168" height="152" rx="12" fill="#ffffff" stroke="#b9ecc9"/>
+  <rect x="698" y="126" width="168" height="4" rx="2" fill="#34c759"/>
+  <circle cx="726" cy="164" r="15" fill="#34c759"/>
+  <text x="726" y="169" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+  <text x="752" y="169" font-size="15" font-weight="700" fill="#0f172a">Mac reclaims</text>
+  <text x="716" y="206" font-size="12" fill="#475569">the disk image shrinks —</text>
+  <text x="716" y="224" font-size="12" fill="#475569">macOS free space</text>
+  <text x="716" y="248" font-size="12" font-weight="700" fill="#1a7f37">finally goes up ✓</text>
+
+  <!-- arrows between cards -->
+  <line x1="216" y1="202" x2="256" y2="202" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+  <line x1="434" y1="202" x2="474" y2="202" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+  <line x1="652" y1="202" x2="692" y2="202" stroke="#94a3b8" stroke-width="2" marker-end="url(#arw)"/>
+
+  <!-- brackets: what any prune does / what Reclaim adds -->
+  <path d="M44 292 L44 300 L430 300 L430 292" fill="none" stroke="#93b4d8" stroke-width="1.5"/>
+  <text x="237" y="318" font-size="11.5" fill="#5b7590" text-anchor="middle" font-weight="600">what any prune-only tool does</text>
+  <path d="M480 292 L480 300 L866 300 L866 292" fill="none" stroke="#57c87d" stroke-width="1.5"/>
+  <text x="673" y="318" font-size="11.5" fill="#1a7f37" text-anchor="middle" font-weight="700">what Reclaim adds — the step everyone skips</text>
+
+  <!-- real numbers -->
+  <rect x="44" y="340" width="822" height="74" rx="12" fill="#eef6ff" stroke="#cfe4fb"/>
+  <text x="66" y="368" font-size="11" font-weight="700" fill="#0a72e0" letter-spacing="0.5">MEASURED ON THE AUTHOR'S MAC</text>
+  <text x="66" y="396" font-size="15" font-weight="700" fill="#0f172a">Host free  6.5 GB <tspan fill="#1a7f37">→ 57 GB</tspan>  ·  ~50 GB actually returned</text>
+  <text x="640" y="396" font-size="13" fill="#475569">~/.colima  84 GB <tspan font-weight="700" fill="#0f172a">→ 42 GB</tspan></text>
+</svg>
