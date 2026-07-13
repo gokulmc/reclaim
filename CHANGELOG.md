@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.2.0 — 2026-07-13
+
+Menu bar redesign — same engine, a much clearer UI.
+
+- **New menu bar icon** — a return-arrow-onto-a-drive glyph ("space, returned") that
+  matches the app icon. Renders as a template image so it adapts to light/dark menu bars,
+  and tints amber then red as free space runs low.
+- **Plain-language panel** — the Docker breakdown is now an itemised list anyone can read:
+  "Build leftovers", "Unused app images", and "Finished containers", each with a plain
+  description and a `CLEANABLE` / `NONE` tag, grouped under **Safe to clear**; your data
+  volumes sit under **Protected — never touched** with a `SAFE` tag.
+- **At-a-glance header** — a rounded host-free-space figure, a Healthy / Low / Critical
+  health pill (same thresholds as the icon), and a "Docker is using" stack-bar with a
+  colour-coded legend.
+- **Action-first layout** — the Reclaim button and "Show me first" preview toggle sit
+  directly under the disk summary, above the detailed list, so the one-click action is the
+  first thing you see.
+- After a real run the header shows "+X just returned" and the result card shows the
+  measured `statfs` delta — honest reporting unchanged.
+
+No changes to the safety model or the engine: volumes remain read-only and unrepresentable
+in the API, and `reclaim-cli` output is unchanged.
+
 ## 0.1.0 — 2026-07-13
 
 Initial release.

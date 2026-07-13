@@ -180,18 +180,26 @@ trim step), `volumes` (read-only listing), `history` (table of past runs).
 
 ## Menu bar app
 
-A `MenuBarExtra` icon shows live host free space and a green/amber/red state as disk
-fills up. Its panel has:
+The menu bar icon shows your Mac's free space and turns amber, then red, as the disk
+fills. Click it for a panel anyone can read — no Docker jargon required:
 
-- A breakdown of Build Cache / Images / Containers / Volumes (locked, "never touched").
-- A Preview toggle, on by default, so you see what would happen before anything runs.
-- A live, monospaced progress log while cleaning — `fstrim` is slow (tens of seconds on
-  a large disk) and the log is there so it doesn't look hung.
-- A result line: "X GB returned to macOS," from the real `statfs` delta.
-- A weekly-schedule toggle backed by `SMAppService`, so Reclaim can run itself on a
-  cadence and notify you of the result instead of you remembering to open it.
+- **A plain-language breakdown** — "Build leftovers", "Unused app images", and "Finished
+  containers" under **Safe to clear**, and your data volumes under **Protected — never
+  touched**, each tagged `CLEANABLE` or `SAFE`.
+- **An at-a-glance header** — a rounded free-space figure, a Healthy / Low / Critical
+  health pill, and a "Docker is using" stack-bar showing where the space went.
+- **One-click, action-first** — the Reclaim button and a "Show me first" preview toggle
+  (on by default) sit right under the summary. Preview shows what would be removed and
+  sends zero mutating requests.
+- **A live progress log** while cleaning — `fstrim` is slow (tens of seconds on a large
+  disk), so each step is shown as it happens and it never looks hung.
+- **A real result** — "X GB returned to your Mac", from the actual `statfs` delta, not
+  Docker's estimate.
+- **A weekly-schedule toggle** backed by `SMAppService`, so Reclaim can run itself and
+  notify you instead of you remembering to open it.
 
-<!-- TODO: add screenshot --> See `docs/screenshot.png` (not yet added).
+<!-- TODO: add a screenshot of the panel at docs/screenshot.png and reference it here -->
+The panel design lives in [`docs/design/panel.html`](docs/design/panel.html).
 
 ## Architecture
 
