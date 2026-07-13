@@ -37,7 +37,9 @@ public struct CleanStepResult: Equatable {
 
 public struct CleanReport: Equatable {
     public let dryRun: Bool
-    public let backend: Backend
+    /// `nil` for a dev-tool cache run (`CacheReclaimer`), which has no Docker backend — only
+    /// `Reclaimer` (Docker) ever produces a report with a non-nil `backend`.
+    public let backend: Backend?
     public let hostFreeBefore: Int64
     public let hostFreeAfter: Int64
     public let steps: [CleanStepResult]
@@ -50,7 +52,7 @@ public struct CleanReport: Equatable {
 
     public init(
         dryRun: Bool,
-        backend: Backend,
+        backend: Backend?,
         hostFreeBefore: Int64,
         hostFreeAfter: Int64,
         steps: [CleanStepResult],

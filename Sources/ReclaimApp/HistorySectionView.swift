@@ -35,7 +35,7 @@ struct HistorySectionView: View {
                                 Text(entry.date, style: .date)
                                     .font(.caption)
                                 Spacer()
-                                Text(entry.backend.displayName)
+                                Text(entry.backend?.displayName ?? "Dev caches")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text(appFormatBytes(entry.hostDelta))

@@ -63,7 +63,8 @@ struct CleanCommand: AsyncParsableCommand {
                 buildCacheReclaimed: report.steps.first(where: { $0.name == "build cache" })?.dockerReportedBytes ?? 0,
                 containersReclaimed: report.steps.first(where: { $0.name == "containers" })?.dockerReportedBytes ?? 0,
                 trimmedBytes: report.trimmedBytes,
-                hostDelta: report.hostDelta
+                hostDelta: report.hostDelta,
+                source: .docker
             )
             do {
                 try HistoryStore().append(entry)

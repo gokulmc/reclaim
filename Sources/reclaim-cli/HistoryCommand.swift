@@ -24,7 +24,7 @@ struct HistoryCommand: AsyncParsableCommand {
         for entry in entries.sorted(by: { $0.date < $1.date }) {
             print(
                 pad(dateFormatter.string(from: entry.date), 18)
-                + pad(entry.backend.displayName, 18)
+                + pad(entry.backend?.displayName ?? "Dev caches", 18)
                 + pad(formatBytes(entry.trimmedBytes), 12)
                 + formatBytes(entry.hostDelta)
             )
