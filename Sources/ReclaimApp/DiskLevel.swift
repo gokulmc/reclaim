@@ -1,12 +1,12 @@
-import SwiftUI
+import AppKit
 
 /// Free-space color state for the menu bar icon.
 ///
 /// Thresholds per docs/IMPLEMENTATION.md ("App (M1-M4)"): green at >=15% of volume capacity
-/// free, amber at 8-15%, red below 8%. A menu bar status item label frequently can't render
-/// a custom tint reliably (macOS often forces template/monochrome rendering there), so for
-/// the red state we additionally swap the SF Symbol itself to a warning triangle rather than
-/// depending on color alone — the same fallback IMPLEMENTATION.md calls for.
+/// free, amber at 8-15%, red below 8%. The menu bar glyph (`MenuBarIcon`) keeps the same
+/// Concept-A shape at every severity — only its color changes, via `nsColor` below, which
+/// drives whether the rendered `NSImage` is a template (monochrome, adapts to the menu bar)
+/// or a non-template image baked with an explicit warning color.
 enum DiskLevel: Equatable {
     case green
     case amber
@@ -27,20 +27,15 @@ enum DiskLevel: Equatable {
         }
     }
 
-    var color: Color {
+    /// `nil` for the green (plenty of space) state — renders `MenuBarIcon` as a template
+    /// image so AppKit recolors it to match the light/dark menu bar automatically. Amber/red
+    /// return an explicit `NSColor`, which `MenuBarIcon.image(tint:)` bakes into the image as
+    /// a non-template render so the warning color actually shows in the status bar.
+    var nsColor: NSColor? {
         switch self {
-        case .green: return .green
-        case .amber: return .orange
-        case .red: return .red
-        }
-    }
-
-    /// `internaldrive` for green/amber; `exclamationmark.triangle` for red so the state still
-    /// reads correctly even if the status bar strips the tint color.
-    var symbolName: String {
-        switch self {
-        case .green, .amber: return "internaldrive"
-        case .red: return "exclamationmark.triangle"
+        case .green: return nil
+        case .amber: return .systemOrange
+        case .red: return .systemRed
         }
     }
 }

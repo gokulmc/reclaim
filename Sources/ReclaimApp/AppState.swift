@@ -45,6 +45,15 @@ final class AppState: ObservableObject {
     private let schedulingService = SMAppService.agent(plistName: "com.gokul.reclaim.agent.plist")
     private var pollTask: Task<Void, Never>?
 
+    /// How many `Reclaimer` "step" events have been mapped to a numbered plain-language header
+    /// so far in the current run (see `handle(event:)` below).
+    private var completedMappedSteps = 0
+    /// Build cache + images + trim = 3. `pruneContainers` is hardcoded to `false` in
+    /// `runClean()` below, so a "Pruning stopped containers" step never fires today; if that
+    /// ever becomes a user-facing option, this needs to become dynamic (options.pruneContainers
+    /// ? 4 : 3) rather than a constant.
+    private let totalMappedSteps = 3
+
     // MARK: - Derived
 
     var diskLevel: DiskLevel {
@@ -52,9 +61,10 @@ final class AppState: ObservableObject {
         return DiskLevel(freeBytes: diskStat.freeBytes, totalBytes: diskStat.totalBytes)
     }
 
+    /// Menu bar label text — whole numbers only ("54 GB"), per the approved icon card.
     var freeSpaceText: String {
         guard let diskStat else { return "…" }
-        return formatBytes(diskStat.freeBytes)
+        return appFormatBytesWhole(diskStat.freeBytes)
     }
 
     init() {
@@ -122,6 +132,7 @@ final class AppState: ObservableObject {
         logLines.removeAll()
         lastReport = nil
         showSlowBuildNote = false
+        completedMappedSteps = 0
 
         let backend = detected.backend
         let socketPath = detected.socketPath
@@ -152,12 +163,49 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Maps a raw `CleanEvent.step` name (`ReclaimKit`/CLI technical language) to the plain
+    /// header the redesigned progress log shows instead (docs/design/copy.html: "Log stages
+    /// get plain headers; raw tool output stays underneath"). The three headed steps get a
+    /// "Step N of `totalMappedSteps`" prefix; the bookkeeping steps around them (checking free
+    /// space before/after, reading Docker's usage) get a plain caption with no step number,
+    /// since they're not part of the "3 steps" the design shows the user.
+    ///
+    /// This intentionally lives here in the app layer, not in `ReclaimKit` — the CLI keeps
+    /// seeing the exact same technical step names `Reclaimer` always emitted.
+    private func plainLogLine(for event: CleanEvent) -> String {
+        switch event {
+        case .step("Pruning build cache"):
+            completedMappedSteps += 1
+            return "Step \(completedMappedSteps) of \(totalMappedSteps) — clearing build leftovers…"
+        case .step("Pruning unused images"):
+            completedMappedSteps += 1
+            return "Step \(completedMappedSteps) of \(totalMappedSteps) — removing unused app images…"
+        case .step("Pruning stopped containers"):
+            completedMappedSteps += 1
+            return "Step \(completedMappedSteps) of \(totalMappedSteps) — clearing finished containers…"
+        case .step(let text) where text.hasPrefix("Trimming"):
+            completedMappedSteps += 1
+            return "Step \(completedMappedSteps) of \(totalMappedSteps) — handing the space back to macOS… "
+                + "this one takes a minute — Docker's disk is being shrunk"
+        case .step("Checking host free space"):
+            return "Checking your Mac's free space…"
+        case .step("Reading Docker disk usage"):
+            return "Looking at what Docker's using…"
+        case .step("Re-checking host free space"):
+            return "Confirming the new free space…"
+        case .step(let text):
+            return text
+        case .log(let text):
+            return "    \(text)"
+        case .done:
+            return ""
+        }
+    }
+
     private func handle(event: CleanEvent) {
         switch event {
-        case .step(let text):
-            logLines.append("==> \(text)")
-        case .log(let text):
-            logLines.append("    \(text)")
+        case .step, .log:
+            logLines.append(plainLogLine(for: event))
         case .done(let report):
             lastReport = report
             isCleaning = false
@@ -200,7 +248,7 @@ final class AppState: ObservableObject {
         guard !isStartingColima else { return }
         isStartingColima = true
         logLines.removeAll()
-        logLines.append("==> Starting Colima")
+        logLines.append("Starting Docker (Colima)…")
 
         let (stream, continuation) = AsyncStream<String>.makeStream()
 

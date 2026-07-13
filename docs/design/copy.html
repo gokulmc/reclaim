@@ -1,0 +1,57 @@
+<!-- @dsCard group="Reclaim" name="Plain-language copy guide" subtitle="Every jargon string → what a layman reads instead" -->
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+         background:#f2f2f7; padding:28px; color:#1d1d1f; }
+  h1 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .note { font-size:12px; color:#6e6e73; margin-bottom:18px; max-width:760px; line-height:1.5; }
+  table { border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden;
+          box-shadow:0 1px 4px rgba(0,0,0,.08); font-size:12px; max-width:860px; }
+  th, td { text-align:left; padding:9px 14px; vertical-align:top; border-bottom:1px solid #ececf0; }
+  th { font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:#6e6e73; background:#fafafc; }
+  td.old { color:#8e8e93; font-family:ui-monospace,Menlo,monospace; font-size:11px; width:32%; }
+  td.new b { font-weight:600; }
+  td.new i { display:block; color:#6e6e73; font-style:normal; font-size:11px; margin-top:2px; }
+  .rule { background:#fff8e6; }
+</style>
+
+<h1>Plain-language copy guide</h1>
+<p class="note">Rule of thumb applied everywhere: <b>name the outcome, not the mechanism.</b>
+A layman doesn't know what a build cache, a dry run, or a backend is — but "old build leftovers,"
+"show me first," and "watching Colima" need no manual. Technical detail never disappears; it moves
+into captions and the log.</p>
+
+<table>
+  <tr><th>Today (jargon)</th><th>Redesign (plain)</th></tr>
+  <tr><td class="old">Docker usage</td>
+      <td class="new"><b>Docker is sitting on ≈ 1.5 GB of junk</b><i>One sentence + one number replaces the four-card table. Split lives under "What exactly?"</i></td></tr>
+  <tr><td class="old">Build Cache — 652 MB reclaimable</td>
+      <td class="new"><b>Build leftovers</b><i>"Scraps from building apps. Docker recreates what it needs later."</i></td></tr>
+  <tr><td class="old">Images — 869 MB reclaimable</td>
+      <td class="new"><b>Unused app images</b><i>"Downloaded software nothing is currently using."</i></td></tr>
+  <tr><td class="old">Containers — 0 stopped</td>
+      <td class="new"><b>Finished containers</b><i>"Programs that already exited." (off by default, unchanged)</i></td></tr>
+  <tr><td class="old">Volumes (protected) — read-only, never touched</td>
+      <td class="new"><b>🔒 Your data is safe</b><i>"11 data volumes (databases, project files) are read-only to Reclaim. It has no delete button for them — by design."</i></td></tr>
+  <tr><td class="old">Preview (dry run) ✓</td>
+      <td class="new"><b>Show me first</b><i>"Nothing is deleted until you turn this off and run it again."</i></td></tr>
+  <tr><td class="old">[ Preview ] / [ Reclaim ]</td>
+      <td class="new"><b>[ See what I'd get back ]</b> / <b>[ Get my space back ]</b><i>Button text follows the toggle.</i></td></tr>
+  <tr><td class="old">Would reclaim roughly 1.48 GB (Docker's estimate…)</td>
+      <td class="new"><b>You'd get back about 1.5 GB</b><i>"Estimate — the real, measured number is shown after a cleanup."</i></td></tr>
+  <tr><td class="old">14.2 GB returned to macOS · Host free: 41.3 GB → 53.7 GB</td>
+      <td class="new"><b>🎉 12.4 GB returned to your Mac</b><i>"Free space went 41.3 GB → 53.7 GB. That's the real number, measured on your disk."</i></td></tr>
+  <tr><td class="old">==&gt; Pruning build cache… / fstrim: /mnt/lima-colima: 49.8 GiB trimmed</td>
+      <td class="new"><b>Step 1 of 3 — clearing build leftovers…</b><i>Log stages get plain headers; raw tool output stays underneath (it's a log). Step 3: "handing the space back to macOS… this one takes a minute."</i></td></tr>
+  <tr><td class="old">Backend: Colima (header, 3rd line)</td>
+      <td class="new"><b>Watching: Colima</b><i>Moves to footer fine print — laymen don't need it above the fold.</i></td></tr>
+  <tr><td class="old">No Docker backend detected</td>
+      <td class="new"><b>Docker isn't running</b><i>Button: "Start Docker (Colima)".</i></td></tr>
+  <tr><td class="old">Clean weekly (SMAppService status)</td>
+      <td class="new"><b>Clean up automatically every week</b><i>"Sundays at 10:00 — you'll get a notification with the result."</i></td></tr>
+  <tr><td class="old">Next build may be slower while the build cache rebuilds.</td>
+      <td class="new"><b>First Docker build after a cleanup can be slower while Docker warms back up.</b><i>Footer fine print, shown once.</i></td></tr>
+  <tr class="rule"><td class="old">53.70 GB free of 460.43 GB</td>
+      <td class="new"><b>53.7 GB free on your Mac</b> + thin usage bar<i>One decimal max, everywhere. "460.43" precision reads as engineering output.</i></td></tr>
+</table>

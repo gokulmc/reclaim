@@ -1,0 +1,108 @@
+<!-- @dsCard group="Reclaim" name="Menu bar icon — concepts A–D" subtitle="Return-arrow drive / sparkle drive / gauge ring / text only, with warning states" -->
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+         background:#f2f2f7; padding:28px; color:#1d1d1f; }
+  h1 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .note { font-size:12px; color:#6e6e73; margin-bottom:22px; max-width:780px; line-height:1.5; }
+  h2 { font-size:13px; font-weight:700; margin:22px 0 8px; }
+  .concepts { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; max-width:980px; }
+  .card { background:#fff; border-radius:12px; padding:14px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .card h3 { font-size:12.5px; margin-bottom:2px; }
+  .card p { font-size:11px; color:#6e6e73; line-height:1.45; min-height:44px; }
+  .big { display:flex; justify-content:center; padding:12px 0 6px; }
+  .rec { display:inline-block; font-size:10px; font-weight:700; color:#fff; background:#0a84ff;
+         border-radius:4px; padding:1px 6px; margin-left:4px; vertical-align:1px; }
+
+  /* fake menu bars */
+  .bar { display:flex; align-items:center; justify-content:flex-end; gap:18px; height:30px;
+         border-radius:8px; padding:0 14px; font-size:12.5px; font-weight:500; margin-bottom:10px; max-width:980px; }
+  .bar.dark  { background:#1c1c1e; color:#fff; }
+  .bar.light { background:#e8e8ed; color:#000; }
+  .slot { display:flex; align-items:center; gap:5px; }
+  .slot svg { display:block; }
+  .sys { opacity:.85; letter-spacing:.2px; }
+
+  .states { display:flex; gap:26px; align-items:center; background:#1c1c1e; border-radius:10px;
+            padding:12px 18px; max-width:640px; }
+  .states .lbl { color:#98989d; font-size:11px; width:150px; }
+  .st { display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff; font-size:11px; }
+</style>
+
+<h1>Menu bar icon — pick a concept</h1>
+<p class="note">All concepts are drawn as <b>template icons</b> (monochrome, auto-adapts to menu bar
+light/dark) and turn amber/red only when disk space runs low — same behavior as today, new face.
+The free-space number stays next to the icon in every concept except C-solo/D (noted below).</p>
+
+<div class="concepts">
+  <div class="card">
+    <h3>A · Return arrow → drive<span class="rec">RECOMMENDED</span></h3>
+    <p>An arrow hooks back down onto a drive slab: “space, returned.” Mini version of the app
+    icon, so menu bar and Dock read as the same product.</p>
+    <div class="big">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/>
+        <rect x="4" y="14.5" width="16" height="6" rx="1.6"/><circle cx="17.2" cy="17.5" r=".9" fill="#1d1d1f" stroke="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>B · Freshly-cleaned drive</h3>
+    <p>Drive slab with a sparkle — “this disk was just tidied.” Friendliest metaphor; less
+    unique (sparkles are everywhere in 2026 UIs).</p>
+    <div class="big">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="12.5" width="16" height="6.5" rx="1.6"/><circle cx="17.2" cy="15.7" r=".9" fill="#1d1d1f" stroke="none"/>
+        <path d="M15.5 3.2l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9z" fill="#1d1d1f" stroke="none"/>
+        <path d="M8.2 4.8l.55 1.35L10.1 6.7l-1.35.55L8.2 8.6l-.55-1.35L6.3 6.7l1.35-.55z" fill="#1d1d1f" stroke="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>C · Disk gauge ring</h3>
+    <p>A ring fills as your disk fills — glanceable health meter, like a tiny battery for disk.
+    Works icon-only (no number) or with the number.</p>
+    <div class="big">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="8.5" stroke="#1d1d1f" stroke-opacity=".22" stroke-width="2.6"/>
+        <circle cx="12" cy="12" r="8.5" stroke="#1d1d1f" stroke-width="2.6" stroke-linecap="round"
+                stroke-dasharray="47 53.4" transform="rotate(-90 12 12)"/>
+        <circle cx="12" cy="12" r="2" fill="#1d1d1f"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>D · Number only</h3>
+    <p>No icon at all — just “54 GB”. Cleanest possible footprint, but loses identity and the
+    color warning has nothing to tint except text.</p>
+    <div class="big" style="align-items:center; font-weight:600; font-size:20px;">54 GB</div>
+  </div>
+</div>
+
+<h2>At real size, in the menu bar</h2>
+<div class="bar dark">
+  <span class="slot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>54 GB</span>
+  <span class="slot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12.5" width="16" height="6.5" rx="1.6"/><path d="M15.5 3.2l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9z" fill="#fff" stroke="none"/></svg>54 GB</span>
+  <span class="slot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="#fff" stroke-opacity=".25" stroke-width="3"/><circle cx="12" cy="12" r="8.5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-dasharray="47 53.4" transform="rotate(-90 12 12)"/></svg>54 GB</span>
+  <span class="slot">54 GB</span>
+  <span class="sys">📶 🔋 Sun 13 Jul 14:52</span>
+</div>
+<div class="bar light">
+  <span class="slot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>54 GB</span>
+  <span class="slot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12.5" width="16" height="6.5" rx="1.6"/><path d="M15.5 3.2l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9z" fill="#000" stroke="none"/></svg>54 GB</span>
+  <span class="slot"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="#000" stroke-opacity=".22" stroke-width="3"/><circle cx="12" cy="12" r="8.5" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-dasharray="47 53.4" transform="rotate(-90 12 12)"/></svg>54 GB</span>
+  <span class="slot">54 GB</span>
+  <span class="sys">📶 🔋 Sun 13 Jul 14:52</span>
+</div>
+
+<h2>Warning states (concept A shown — same rule for all)</h2>
+<div class="states">
+  <span class="lbl">Plenty of space → monochrome<br>Low (&lt;15%) → amber<br>Critical (&lt;8%) → red</span>
+  <span class="st"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>54 GB</span>
+  <span class="st" style="color:#ffb340"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffb340" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>52 GB</span>
+  <span class="st" style="color:#ff6961"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff6961" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 3v3.5a3 3 0 0 1-3 3H7.5"/><path d="M10 6.5 7 9.5l3 3"/><rect x="4" y="14.5" width="16" height="6" rx="1.6"/></svg>18 GB</span>
+</div>

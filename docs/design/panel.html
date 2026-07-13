@@ -1,0 +1,151 @@
+<!-- @dsCard group="Reclaim" name="Panel — plain-language redesign" subtitle="One junk number, big friendly button, safety strip — light & dark" -->
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+         background:#f2f2f7; padding:28px; }
+  h1 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .note { font-size:12px; color:#6e6e73; margin-bottom:20px; max-width:760px; line-height:1.5; }
+  .row { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+
+  /* ---- panel chrome ---- */
+  .panel { width:380px; border-radius:12px; padding:16px; font-size:13px;
+           box-shadow:0 10px 30px rgba(0,0,0,.18), 0 0 0 .5px rgba(0,0,0,.12); }
+  .panel.light { background:#f5f5f7; color:#1d1d1f; }
+  .panel.dark  { background:#2a2a2d; color:#f5f5f7; box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 0 .5px rgba(255,255,255,.14); }
+  .panel .sec  { color:#6e6e73; } .panel.dark .sec { color:#98989d; }
+  .hr { height:1px; background:rgba(0,0,0,.09); margin:13px 0; } .dark .hr { background:rgba(255,255,255,.12); }
+
+  /* header */
+  .hdr { display:flex; align-items:center; gap:7px; font-weight:700; font-size:14px; }
+  .free { font-size:22px; font-weight:700; letter-spacing:-.3px; margin-top:8px; }
+  .free small { font-size:12px; font-weight:500; }
+  .bar { height:5px; border-radius:3px; background:rgba(120,120,128,.2); margin-top:7px; overflow:hidden; }
+  .bar i { display:block; height:100%; width:88%; border-radius:3px; background:linear-gradient(90deg,#30b0c7,#0a84ff); }
+
+  /* hero junk card */
+  .hero { border-radius:10px; padding:12px; background:rgba(10,132,255,.09); }
+  .dark .hero { background:rgba(10,132,255,.16); }
+  .hero b { font-size:15px; }
+  .hero p { font-size:12px; margin-top:3px; line-height:1.4; }
+  details { margin-top:8px; font-size:12px; }
+  summary { cursor:default; color:#0a84ff; font-weight:600; list-style:none; }
+  summary::before { content:"▸ "; } details[open] summary::before { content:"▾ "; }
+  .drow { display:flex; justify-content:space-between; padding:3px 0 0 14px; }
+
+  /* button + toggle */
+  .cta { display:block; width:100%; margin-top:13px; padding:8px 0; border:0; border-radius:7px;
+         background:#0a84ff; color:#fff; font-size:13px; font-weight:600; text-align:center; }
+  .tgl { display:flex; align-items:flex-start; gap:8px; margin-top:10px; font-size:12px; line-height:1.35; }
+  .sw { flex:none; width:32px; height:19px; border-radius:10px; background:#34c759; position:relative; margin-top:1px; }
+  .sw i { position:absolute; top:1.5px; right:1.5px; width:16px; height:16px; border-radius:8px; background:#fff;
+          box-shadow:0 1px 2px rgba(0,0,0,.25); }
+  .sw.off { background:rgba(120,120,128,.32); } .sw.off i { right:auto; left:1.5px; }
+
+  /* safety strip */
+  .safe { border-radius:10px; padding:10px 12px; background:rgba(52,199,89,.10); font-size:12px; line-height:1.45; }
+  .dark .safe { background:rgba(52,199,89,.15); }
+  .safe b { display:flex; align-items:center; gap:6px; font-size:12px; }
+
+  /* result */
+  .res { border-radius:10px; padding:10px 12px; background:rgba(52,199,89,.14); }
+  .res b { font-size:14px; } .res p { font-size:11.5px; margin-top:2px; }
+
+  .line { display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .foot { display:flex; justify-content:space-between; font-size:12px; }
+  .foot span { color:#0a84ff; }
+  .fine { font-size:10.5px; margin-top:9px; }
+</style>
+
+<h1>Reclaim panel — plain-language redesign</h1>
+<p class="note">What changed vs. v1: the four Docker-jargon cards (Build Cache / Images / Containers / Volumes)
+collapse into <b>one plain sentence with one number</b> — "Docker is sitting on X of junk" — with the technical
+split tucked behind "What exactly?". "Preview (dry run)" becomes <b>"Show me first"</b>. The volumes table becomes a
+green <b>"Your data is safe"</b> strip. Backend name moves to the footer fine print. Same stock native controls —
+no custom chrome.</p>
+
+<div class="row">
+
+<!-- ============ LIGHT ============ -->
+<div class="panel light">
+  <div class="hdr">⛭ Reclaim</div>
+  <div class="free">53.7 GB <small class="sec">free on your Mac</small></div>
+  <div class="bar"><i></i></div>
+
+  <div class="hr"></div>
+
+  <div class="hero">
+    <b>Docker is sitting on ≈ 1.5 GB of junk</b>
+    <p class="sec">Old build leftovers and unused downloads. Safe to clear — Docker recreates
+    anything it needs later.</p>
+    <details open>
+      <summary>What exactly?</summary>
+      <div class="drow"><span class="sec">Build leftovers</span><span>652 MB</span></div>
+      <div class="drow"><span class="sec">Unused app images</span><span>869 MB</span></div>
+      <div class="drow"><span class="sec">Finished containers</span><span>0 B</span></div>
+    </details>
+  </div>
+
+  <button class="cta">See what I’d get back</button>
+  <div class="tgl"><span class="sw"><i></i></span>
+    <span><b>Show me first</b><br><span class="sec">Nothing is deleted until you turn this off and run it again.</span></span>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="safe">
+    <b>🔒 Your data is safe</b>
+    <span class="sec">11 data volumes (databases, project files) are read-only to Reclaim.
+    It has no delete button for them — by design.</span>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="line"><span>Last cleanup: 3 days ago</span><span class="sec">12.4 GB returned</span></div>
+  <div class="tgl"><span class="sw off"><i></i></span>
+    <span><b>Clean up automatically every week</b><br><span class="sec">Sundays at 10:00 — you’ll get a notification with the result.</span></span>
+  </div>
+
+  <div class="hr"></div>
+  <div class="foot"><span>Refresh</span><span>Quit</span></div>
+  <div class="fine sec">Watching: Colima</div>
+</div>
+
+<!-- ============ DARK (result state) ============ -->
+<div class="panel dark">
+  <div class="hdr">⛭ Reclaim</div>
+  <div class="free">53.7 GB <small class="sec">free on your Mac</small></div>
+  <div class="bar"><i></i></div>
+
+  <div class="hr"></div>
+
+  <div class="res">
+    <b>🎉 12.4 GB returned to your Mac</b>
+    <p class="sec">Free space went 41.3 GB → 53.7 GB. That’s the real number, measured on your disk.</p>
+  </div>
+
+  <div style="margin-top:10px; border-radius:8px; background:rgba(0,0,0,.35); padding:8px 10px; font-family:ui-monospace,Menlo,monospace; font-size:10.5px; line-height:1.6;" class="sec">
+    Step 1 of 3 — clearing build leftovers… done (652 MB)<br>
+    Step 2 of 3 — removing unused app images… done (869 MB)<br>
+    Step 3 of 3 — handing the space back to macOS…<br>
+    &nbsp;&nbsp;this one takes a minute — Docker’s disk is being shrunk
+  </div>
+
+  <div class="tgl" style="margin-top:11px"><span class="sw off"><i></i></span>
+    <span><b>Show me first</b><br><span class="sec">Off — the next run cleans for real.</span></span>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="safe">
+    <b>🔒 Your data is safe</b>
+    <span class="sec">11 data volumes untouched, as always.</span>
+  </div>
+
+  <div class="hr"></div>
+  <div class="foot"><span>Refresh</span><span>Quit</span></div>
+  <div class="fine sec">Watching: Colima · First build after a cleanup can be slower while Docker warms back up.</div>
+</div>
+
+</div>
