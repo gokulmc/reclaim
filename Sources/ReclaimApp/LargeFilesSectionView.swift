@@ -82,12 +82,16 @@ struct LargeFilesSectionView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.dangerZoneBackground)
         } label: {
             headerLabel
         }
         .padding(.horizontal, 11)
-        .padding(.vertical, 6)
+        .padding(.vertical, 8)
+        // The whole point of this milestone: a full-width distinct "danger zone" band behind
+        // the entire section — label included — so it reads as different-from-everything-else
+        // even when collapsed (not only once expanded).
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.dangerZoneBackground)
         .alert(
             "Move \(appState.selectedLargeItemIDs.count) item(s) (~\(appFormatBytes(selectedBytes))) to the Trash?",
             isPresented: $appState.showLargeFilesTrashConfirmation
