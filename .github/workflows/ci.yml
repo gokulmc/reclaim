@@ -52,6 +52,14 @@ jobs:
           fi
           echo "OK: removeItem confined to CacheDeleter.swift"
 
+      - name: Source grep — trashItem must be confined to FileTrasher.swift
+        run: |
+          FOUND=$(grep -Rl "trashItem" Sources/ || true)
+          if [ -n "$FOUND" ] && [ "$FOUND" != "Sources/ReclaimKit/FileTrasher.swift" ]; then
+            echo "FAIL: trashItem must appear only in FileTrasher.swift, found in: $FOUND"; exit 1
+          fi
+          echo "OK: trashItem confined to FileTrasher.swift"
+
       - name: Build release CLI
         run: swift build -c release --product reclaim-cli
 

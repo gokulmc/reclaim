@@ -2,10 +2,12 @@ import Foundation
 
 /// Which engine produced a `HistoryEntry`. Added in M3a alongside the dev-tool cache
 /// subsystem; absent (`nil`) on every entry recorded before this milestone, since a Docker
-/// clean was the only kind of run that could ever be appended.
+/// clean was the only kind of run that could ever be appended. `.largeFiles` was added in
+/// M-LF5 alongside `LargeFilesReclaimer` (additive; existing cases/decode behavior unchanged).
 public enum HistorySource: String, Codable, Equatable {
     case docker
     case caches
+    case largeFiles
 }
 
 /// One recorded run, appended after every real (non-dry-run) `clean`.
