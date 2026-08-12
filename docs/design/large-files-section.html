@@ -1,0 +1,109 @@
+<!-- @dsCard group="Reclaim" name="Large files & folders section (danger zone)" subtitle="Distinct amber band at panel bottom; collapsed default + scan/select/Trash flow — light & dark" width="760" height="760" -->
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+    background:linear-gradient(150deg,#a5aec0 0%,#77839a 100%); display:flex; gap:40px; flex-wrap:wrap;
+    justify-content:center; align-items:flex-start; padding:34px; -webkit-font-smoothing:antialiased; }
+  .col { display:flex; flex-direction:column; gap:9px; align-items:center; }
+  .cap { color:#fff; font-size:12px; font-weight:600; opacity:.95; }
+  .panel { width:320px; border-radius:13px; padding:6px; box-shadow:0 16px 48px rgba(0,0,0,.32), inset 0 0 0 .5px rgba(255,255,255,.12); overflow:hidden; }
+  .light { background:rgba(248,248,250,.96); color:#1d1d1f; }
+  .dark  { background:rgba(32,32,36,.96); color:#f2f2f4; }
+  .sep { height:1px; margin:6px 11px; } .light .sep{background:rgba(0,0,0,.08);} .dark .sep{background:rgba(255,255,255,.1);}
+  .sect { padding:8px 11px 4px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .light .sect{color:rgba(0,0,0,.35);} .dark .sect{color:rgba(255,255,255,.35);}
+  .dim { font-size:11px; } .light .dim{color:rgba(0,0,0,.48);} .dark .dim{color:rgba(255,255,255,.5);}
+  .ghost { opacity:.5; }
+
+  /* ---- the danger-zone band (the one distinct background) ---- */
+  .zone { background:rgba(255,159,10,.09); padding:2px 0 8px; }
+  .dark .zone { background:rgba(255,159,10,.11); }
+  .zhead { display:flex; align-items:center; gap:7px; padding:9px 11px 2px; }
+  .ztri { font-size:11px; } .light .ztri{color:rgba(0,0,0,.4);} .dark .ztri{color:rgba(255,255,255,.45);}
+  .ztitle { font-size:12.5px; font-weight:600; }
+  .zrisk { font-size:9.5px; font-weight:700; letter-spacing:.3px; padding:1px 5px; border-radius:4px; background:rgba(255,159,10,.2); color:#b25e00; }
+  .dark .zrisk { color:#ffb340; }
+  .zsize { margin-left:auto; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .zintro { padding:1px 11px 7px; font-size:11px; } .light .zintro{color:rgba(0,0,0,.5);} .dark .zintro{color:rgba(255,255,255,.55);}
+
+  /* FDA banner */
+  .fda { margin:2px 11px 6px; border-radius:8px; padding:8px 10px; background:rgba(255,159,10,.15); font-size:11px; line-height:1.4; }
+  .fda b { font-weight:600; } .fda a { display:inline-block; margin-top:5px; color:#0a84ff; font-weight:600; }
+
+  /* scan button / progress */
+  .scanbtn { display:block; width:calc(100% - 22px); margin:2px 11px; padding:7px 0; border-radius:8px; background:#0a84ff; color:#fff; font-size:12.5px; font-weight:600; text-align:center; }
+  .prog { display:flex; align-items:center; gap:8px; padding:4px 11px; font-size:11px; } .light .prog{color:rgba(0,0,0,.55);} .dark .prog{color:rgba(255,255,255,.6);}
+  .cancel { margin-left:auto; color:#0a84ff; font-weight:600; }
+
+  /* rows */
+  .row { display:flex; align-items:center; gap:10px; padding:5px 11px; }
+  .ck { width:16px; height:16px; border-radius:5px; flex:none; display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; }
+  .ck.on { background:#0a84ff; } .ck.off { box-shadow:inset 0 0 0 1.5px rgba(120,120,128,.5); }
+  .lock { width:16px; flex:none; text-align:center; font-size:11px; opacity:.5; }
+  .kind { width:15px; flex:none; text-align:center; font-size:12px; }
+  .rp { flex:1; min-width:0; font-size:11.5px; font-family:ui-monospace,Menlo,monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rs { flex:none; font-size:11.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .light .rs{color:rgba(0,0,0,.8);} .dark .rs{color:rgba(255,255,255,.85);}
+  .row.prot { opacity:.5; } .row.prot .rp { font-family:-apple-system,sans-serif; }
+  .more { padding:3px 11px 2px 36px; font-size:11px; } .light .more{color:rgba(0,0,0,.4);} .dark .more{color:rgba(255,255,255,.42);}
+
+  /* action bar */
+  .bar { padding:6px 11px 2px; }
+  .barrow { display:flex; align-items:center; font-size:11px; }
+  .barrow .clr { color:#0a84ff; font-weight:600; } .barrow .sum { margin-left:auto; font-weight:600; }
+  .light .barrow .sum{color:rgba(0,0,0,.65);} .dark .barrow .sum{color:rgba(255,255,255,.7);}
+  .trash { display:block; width:100%; margin-top:8px; padding:8px 0; border-radius:8px; background:#0a84ff; color:#fff; font-size:12.5px; font-weight:600; text-align:center; }
+  .tgl { display:flex; align-items:flex-start; gap:9px; margin-top:9px; }
+  .sw { flex:none; width:30px; height:18px; border-radius:9px; background:#34c759; position:relative; margin-top:1px; }
+  .sw i { position:absolute; top:1.5px; right:1.5px; width:15px; height:15px; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.25); }
+  .tt b { font-size:11.5px; font-weight:600; } .tt p { font-size:10.5px; margin-top:1px; } .light .tt p{color:rgba(0,0,0,.48);} .dark .tt p{color:rgba(255,255,255,.5);}
+  .foot { display:flex; font-size:12px; padding:8px 11px 2px; } .foot .k{margin-left:auto;} .light .foot{color:rgba(0,0,0,.6);} .dark .foot{color:rgba(255,255,255,.65);}
+</style>
+
+<!-- ============ COLLAPSED (default) ============ -->
+<div class="col">
+  <div class="cap">Collapsed — panel unchanged, new band at bottom</div>
+  <div class="panel light">
+    <div class="sect ghost">Docker · Dev tool caches · History …</div>
+    <div class="ghost" style="padding:6px 12px"><div class="dim">🧱 Docker · 📦 caches · 🕓 history (all unchanged)</div></div>
+    <div class="sep"></div>
+    <!-- the distinct amber band, collapsed -->
+    <div class="zone">
+      <div class="zhead"><span class="ztri">▸</span><span class="ztitle">Large files &amp; folders</span><span class="zrisk">HIGHER-RISK</span><span class="zsize"></span></div>
+    </div>
+    <div class="sep"></div>
+    <div class="foot"><span>Refresh</span><span>Quit Reclaim</span><span class="k" style="opacity:.4">⌘Q</span></div>
+  </div>
+</div>
+
+<!-- ============ EXPANDED — results ============ -->
+<div class="col">
+  <div class="cap">Expanded — scanned, per-item selection, move to Trash</div>
+  <div class="panel dark">
+    <div class="zone">
+      <div class="zhead"><span class="ztri">▾</span><span class="ztitle">Large files &amp; folders</span><span class="zrisk">HIGHER-RISK</span><span class="zsize">61 GB</span></div>
+      <div class="zintro">The biggest files &amp; folders in your home. Selected items move to the <b>Trash</b> — recoverable.</div>
+
+      <div class="fda"><b>Some areas were skipped</b> (Desktop, Documents, iCloud Drive). Grant Full Disk Access to include them.<br><a>Open Full Disk Access settings →</a></div>
+
+      <div class="row prot"><span class="lock">🔒</span><span class="kind">📁</span><span class="rp">~/Library</span><span class="rs">105 GB</span></div>
+      <div class="row prot"><span class="lock">🔒</span><span class="kind">📁</span><span class="rp">~/.colima  · Docker</span><span class="rs">43 GB</span></div>
+      <div class="row"><span class="ck off"></span><span class="kind">📁</span><span class="rp">~/Downloads</span><span class="rs">9.2 GB</span></div>
+      <div class="row"><span class="ck on">✓</span><span class="kind">📁</span><span class="rp">~/tactyle/node_modules</span><span class="rs">6.5 GB</span></div>
+      <div class="row"><span class="ck off"></span><span class="kind">📄</span><span class="rp">~/Downloads/Xcode_15.dmg</span><span class="rs">3.1 GB</span></div>
+      <div class="row"><span class="ck on">✓</span><span class="kind">📄</span><span class="rp">~/Movies/screen-rec-old.mov</span><span class="rs">2.4 GB</span></div>
+      <div class="more">+ 11 more…</div>
+
+      <div class="bar">
+        <div class="barrow"><span class="clr">Clear</span><span class="sum">2 selected · ≈ 8.9 GB</span></div>
+        <div class="trash">See what I’d move</div>
+        <div class="tgl"><span class="sw"><i></i></span><div class="tt"><b>Show me first</b><p>Nothing moves until you turn this off and confirm.</p></div></div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="foot"><span>Refresh</span><span>Quit Reclaim</span><span class="k" style="opacity:.4">⌘Q</span></div>
+  </div>
+</div>
+
+<div class="cap" style="width:100%; text-align:center; opacity:.9">Distinct amber "higher-risk" band at the very bottom (above footer) · files 📄 + folders 📁 · protected items 🔒 non-selectable (Library, ~/.colima, credentials) · move to Trash (recoverable) · dry-run + confirm</div>

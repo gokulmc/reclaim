@@ -65,6 +65,9 @@ struct DetailPanelView: View {
                 .padding(.vertical, 8)
 
                 divider
+                LargeFilesSectionView()
+
+                divider
                 footerSection
             }
         }

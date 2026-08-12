@@ -44,6 +44,17 @@ enum Palette {
     static let ctaFill = buildCache
     static let ctaPressedFill = Color(redByte: 0x00, 0x60, 0xDF)
 
+    // MARK: - Large files & folders danger zone (M-LF8, docs/design/large-files-section.html)
+
+    /// The `.zone` band's subtle amber wash — a full-width background marking "Large files &
+    /// folders" as a higher-risk zone (the app's first feature that can delete arbitrary user
+    /// files). `containers` (`#ff9f0a`) is already the app's warning/amber tone (the Docker
+    /// footprint's "Containers" segment), so this reuses that hue rather than adding a new one.
+    static let dangerZoneBackground = containers.opacity(0.07)
+
+    /// The "HIGHER-RISK" pill's foreground (`.zrisk` in the design card).
+    static let dangerAccentFG = dynamic(light: 0xB25E00, dark: 0xFFB340)
+
     /// A light/dark pair resolved against the current effective appearance.
     static func dynamic(light: Int, dark: Int) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in

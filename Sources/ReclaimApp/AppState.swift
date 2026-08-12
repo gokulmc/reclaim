@@ -41,6 +41,38 @@ final class AppState: ObservableObject {
     @Published private(set) var cacheReport: CleanReport?
     @Published private(set) var isCleaningCaches = false
 
+    // MARK: - Large files & folders (M-LF7/M-LF8, see docs/design/large-files-section.html)
+
+    /// The most recent whole-home scan's ranked results (both large files and large folders,
+    /// largest first — `LargeItemScanner` already sorts). Empty until the user explicitly
+    /// triggers `startLargeFileScan()`; **never** populated by `refresh()`'s 60s poll — a
+    /// whole-home walk is comparatively expensive, and this is the app's first feature that can
+    /// delete arbitrary user files, so it stays strictly button-triggered.
+    @Published private(set) var largeItems: [LargeItem] = []
+    /// IDs ticked in the danger-zone list — only ever `LargeItem.id`s where `isSelectable` is
+    /// true (`toggleLargeItemSelection` guards this). Nothing pre-ticked, and there is no
+    /// "select all" for this section.
+    @Published var selectedLargeItemIDs: Set<String> = []
+    @Published private(set) var isScanningLargeFiles = false
+    @Published private(set) var largeScanProgress: LargeScanProgress?
+    @Published private(set) var largeFilesSkippedAreas: [String] = []
+    @Published private(set) var largeFilesNeedsFullDiskAccess = false
+
+    /// Self-contained, exactly like `cacheLogLines`/`cacheReport`/`isCleaningCaches` above — the
+    /// large-files move-to-Trash flow never reads or writes Docker's `logLines`/`lastReport` or
+    /// the dev-tool cache flow's `cacheLogLines`/`cacheReport`.
+    @Published private(set) var largeFilesLog: [String] = []
+    @Published private(set) var largeFilesReport: CleanReport?
+    @Published private(set) var isTrashingLargeFiles = false
+    /// Arms the confirmation `.alert` in `LargeFilesSectionView`; only `requestTrashSelected()`
+    /// sets it true, and the alert itself (Move to Trash or Cancel) is what sets it back false.
+    @Published var showLargeFilesTrashConfirmation = false
+    /// A **dedicated** preview flag for the danger zone — deliberately independent of the
+    /// shared Docker/caches `previewMode` below, so toggling one never silently arms the other.
+    /// Defaults to `true` (dry-run first), mirroring `previewMode`'s own default and SPEC.md
+    /// §2.4's "dry-run must be the default" rule.
+    @Published var largeFilesPreviewMode: Bool = true
+
     // MARK: - Clean run
 
     /// Dry-run is ON by default (SPEC.md §2.4: dry-run must be the default).
@@ -78,6 +110,9 @@ final class AppState: ObservableObject {
     private let historyStore = HistoryStore()
     private let schedulingService = SMAppService.agent(plistName: "com.gokul.reclaim.agent.plist")
     private var pollTask: Task<Void, Never>?
+    /// Retained so `cancelLargeFileScan()` can actually cancel an in-flight whole-home walk —
+    /// mirrors `pollTask` above.
+    private var largeScanTask: Task<Void, Never>?
 
     /// How many `Reclaimer` "step" events have been mapped to a numbered plain-language header
     /// so far in the current run (see `handle(event:)` below).
@@ -443,6 +478,169 @@ final class AppState: ObservableObject {
             loadHistory()
         } catch {
             cacheLogLines.append("warning: failed to record history: \(error)")
+        }
+    }
+
+    // MARK: - Large files & folders (M-LF7/M-LF8, see docs/design/large-files-section.html)
+
+    /// Emitted by the scan's `AsyncStream` consumer below — wraps `LargeScanProgress`/
+    /// `LargeScanResult` (both `ReclaimKit`) so a single stream can carry live progress ticks
+    /// alongside the final result.
+    private enum LargeScanEvent {
+        case progress(LargeScanProgress)
+        case finished(LargeScanResult)
+    }
+
+    /// Kicks off a whole-home scan: probes Full Disk Access off-thread, then drives
+    /// `LargeItemScanner.scan` on a **retained** detached task through an `AsyncStream`,
+    /// mirroring `cleanSelectedCaches()`'s detached-work/stream/consumer shape. Button-triggered
+    /// only — never called from `refresh()` or the 60s poll.
+    func startLargeFileScan() {
+        guard !isScanningLargeFiles else { return }
+        isScanningLargeFiles = true
+        largeFilesLog.removeAll()
+        largeFilesReport = nil
+        largeScanProgress = nil
+        largeItems = []
+        selectedLargeItemIDs.removeAll()
+
+        Task {
+            let probe = await Task.detached(priority: .utility) {
+                FullDiskAccessProbe().probe()
+            }.value
+            largeFilesNeedsFullDiskAccess = probe.needsFullDiskAccess
+        }
+
+        let (stream, continuation) = AsyncStream<LargeScanEvent>.makeStream()
+
+        largeScanTask = Task.detached(priority: .utility) {
+            let scanner = LargeItemScanner()
+            let result = await scanner.scan { progress in
+                continuation.yield(.progress(progress))
+            }
+            continuation.yield(.finished(result))
+            continuation.finish()
+        }
+
+        Task {
+            for await event in stream {
+                handle(largeScanEvent: event)
+            }
+        }
+    }
+
+    /// `LargeItemScanner.scan` checks `Task.isCancelled` throughout its recursive walk and
+    /// returns a partial `LargeScanResult` with `wasCancelled == true` rather than throwing, so
+    /// cancelling `largeScanTask` here still lets the stream consumer above finish cleanly and
+    /// `isScanningLargeFiles` still gets cleared via the normal `.finished` handling.
+    func cancelLargeFileScan() {
+        largeScanTask?.cancel()
+    }
+
+    private func handle(largeScanEvent event: LargeScanEvent) {
+        switch event {
+        case .progress(let progress):
+            largeScanProgress = progress
+        case .finished(let result):
+            largeItems = result.items
+            largeFilesSkippedAreas = result.skippedAreas
+            isScanningLargeFiles = false
+            largeScanProgress = nil
+        }
+    }
+
+    /// Only a non-protected item can ever be selected — `LargeItem.isSelectable` mirrors
+    /// `FileTrashGuard.validate`'s rejection, so a protected id is silently ignored here rather
+    /// than trusted to have never been passed in. No "select all" for this section.
+    func toggleLargeItemSelection(_ id: String) {
+        guard let item = largeItems.first(where: { $0.id == id }), item.isSelectable else { return }
+        if selectedLargeItemIDs.contains(id) {
+            selectedLargeItemIDs.remove(id)
+        } else {
+            selectedLargeItemIDs.insert(id)
+        }
+    }
+
+    func clearLargeSelection() {
+        selectedLargeItemIDs.removeAll()
+    }
+
+    /// Arms the confirmation alert — the actual move only ever happens from
+    /// `moveSelectedToTrash(dryRun:)`, called by the alert's own destructive button.
+    func requestTrashSelected() {
+        showLargeFilesTrashConfirmation = true
+    }
+
+    /// Kicks off `LargeFilesReclaimer.trash` on a detached task and streams its `CleanEvent`s
+    /// back to the main actor, mirroring `cleanSelectedCaches()`'s shape exactly — but writing
+    /// only into the large-files-only `largeFilesLog`/`largeFilesReport`/`isTrashingLargeFiles`
+    /// state, never Docker's or the dev-tool cache flow's.
+    func moveSelectedToTrash(dryRun: Bool) {
+        guard !isTrashingLargeFiles, !selectedLargeItemIDs.isEmpty else { return }
+        isTrashingLargeFiles = true
+        largeFilesLog.removeAll()
+        largeFilesReport = nil
+
+        let selection = largeItems.filter { selectedLargeItemIDs.contains($0.id) && $0.isSelectable }
+        let options = CleanOptions(dryRun: dryRun)
+
+        let (stream, continuation) = AsyncStream<CleanEvent>.makeStream()
+
+        Task.detached(priority: .userInitiated) {
+            let reclaimer = LargeFilesReclaimer()
+            do {
+                _ = try await reclaimer.trash(selection: selection, options: options) { event in
+                    continuation.yield(event)
+                }
+            } catch {
+                continuation.yield(.log("Error: \(error)"))
+            }
+            continuation.finish()
+        }
+
+        Task {
+            for await event in stream {
+                handle(largeFilesEvent: event)
+            }
+            // Fallback in case the stream ended without a `.done` (e.g. a thrown error) — never
+            // leave the button stuck.
+            isTrashingLargeFiles = false
+        }
+    }
+
+    private func handle(largeFilesEvent event: CleanEvent) {
+        switch event {
+        case .step(let text):
+            largeFilesLog.append(text)
+        case .log(let text):
+            largeFilesLog.append(text)
+        case .done(let report):
+            largeFilesReport = report
+            isTrashingLargeFiles = false
+            guard !report.dryRun else { return }
+            recordLargeFilesHistory(for: report)
+            selectedLargeItemIDs.removeAll()
+            Task { await self.refresh() }
+        }
+    }
+
+    private func recordLargeFilesHistory(for report: CleanReport) {
+        let entry = HistoryEntry(
+            date: Date(),
+            backend: nil,
+            imagesReclaimed: 0,
+            buildCacheReclaimed: 0,
+            containersReclaimed: 0,
+            trimmedBytes: 0,
+            hostDelta: report.hostDelta,
+            source: .largeFiles,
+            cachesReclaimed: report.hostDelta
+        )
+        do {
+            try historyStore.append(entry)
+            loadHistory()
+        } catch {
+            largeFilesLog.append("warning: failed to record history: \(error)")
         }
     }
 
