@@ -20,7 +20,8 @@ struct ReclaimCLI: AsyncParsableCommand {
             CleanCommand.self,
             TrimCommand.self,
             VolumesCommand.self,
-            HistoryCommand.self
+            HistoryCommand.self,
+            LargeFilesCommand.self
         ],
         defaultSubcommand: StatusCommand.self
     )
