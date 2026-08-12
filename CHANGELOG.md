@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.3.0 — 2026-08-12
+
+Reclaim grows from a Docker tool into a general macOS disk cleaner — same safety-first posture.
+
+- **Dev-tool caches.** A new "Dev tool caches" section reclaims npm, pnpm, yarn, pip,
+  Homebrew, Gradle, CocoaPods and Xcode DerivedData, and fans out `~/Library/Caches`
+  **per app** so you clear exactly the app caches you choose. New `reclaim-cli caches`.
+- **Large files & folders.** A distinct "higher-risk" section scans your whole home
+  folder, ranks the biggest files and folders, and moves the ones you select to the
+  **Trash** (recoverable). Cancellable scan with live progress; a Full Disk Access prompt
+  for the areas macOS gates; protected locations (`~/Library`, credentials, iCloud,
+  Docker-managed `~/.colima`, and the standard folders as whole units) are shown 🔒 and
+  can't be selected. New `reclaim-cli largefiles`.
+- **Per-image Docker cleanup.** An opt-in "Remove specific images…" list removes
+  individual unused images; in-use ones are skipped. New `clean --image` flag.
+- **Safety, extended.** File deletion moves to the Trash, never permanent `rm`. Both
+  destructive primitives are confined to one audited file each (`removeItem` → the cache
+  deleter, `trashItem` → the file trasher), enforced by CI grep gates alongside the
+  existing volume-prune gates. Dry-run / "Show me first" stays the default everywhere; the
+  large-files move adds an explicit confirmation.
+
 ## 0.2.0 — 2026-07-13
 
 Menu bar redesign — same engine, a much clearer UI.

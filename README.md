@@ -51,6 +51,22 @@ layers on disk — the space Docker attributes to each image individually isn't 
 Reclaim always shows the number your Mac's Finder would agree with, and labels
 dry-run estimates explicitly as Docker's own numbers so the two are never confused.
 
+## Beyond Docker — caches & large files
+
+Reclaim is also a general macOS disk cleaner (all dry-run by default, with confirmation
+before anything is removed):
+
+- **Dev-tool caches.** A "Dev tool caches" section reclaims npm, pnpm, yarn, pip,
+  Homebrew, Gradle, CocoaPods and Xcode DerivedData, and fans out `~/Library/Caches`
+  **per app** so you tick exactly which apps' caches to clear. CLI: `reclaim-cli caches`.
+- **Large files & folders.** A distinct "higher-risk" section scans your whole home
+  folder, ranks the biggest files and folders, and moves the ones you pick to the
+  **Trash** (recoverable — never `rm`). System, credential, iCloud, `~/Library`, and
+  Docker-managed (`~/.colima`) locations are protected 🔒 and can't be selected; it prompts
+  for Full Disk Access to reach Desktop/Documents/iCloud. CLI: `reclaim-cli largefiles`.
+- **Specific Docker images.** An opt-in list under the Images row removes individual
+  unused images (in-use ones are skipped). CLI: `reclaim-cli clean --image <id>`.
+
 ## Safety
 
 This tool touches a Docker daemon and shells out to a VM. The rules below are not style
@@ -69,9 +85,15 @@ database.
   zero mutating requests.
 - **Never touches images used by running containers.** That's `docker image prune -a`'s
   own behavior; Reclaim doesn't hand-roll pruning logic on top of it.
+- **Deleting real files is recoverable and gated.** The large-files cleaner moves items
+  to the **Trash**, never permanent `rm`. Each destructive primitive is confined to a
+  single audited file — `removeItem` to the cache deleter, `trashItem` to the file
+  trasher — and a path guard refuses your home root, the standard folders as whole units,
+  credentials, iCloud, `~/Library` internals, and Docker-managed dirs.
 - **Regression-tested in CI.** Every build greps the source tree and the compiled
-  release binary for the volume-prune request path and fails the build if it's ever
-  found — see `.github/workflows/ci.yml`.
+  release binary for the volume-prune request path, and confirms `removeItem`/`trashItem`
+  each stay confined to their one audited file — failing the build otherwise (see
+  `.github/workflows/ci.yml`).
 
 Why this is worth stating loudly: a volume like `prod_pg_data` (a live Postgres
 database) with no *running* container attached to it looks identical to garbage from

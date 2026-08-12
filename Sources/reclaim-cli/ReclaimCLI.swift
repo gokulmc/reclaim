@@ -13,7 +13,7 @@ struct ReclaimCLI: AsyncParsableCommand {
         Volumes are always read-only in this tool — there is no code path that can ever
         delete one.
         """,
-        version: "0.2.0",
+        version: "0.3.0",
         subcommands: [
             StatusCommand.self,
             CachesCommand.self,
