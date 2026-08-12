@@ -49,4 +49,29 @@ public enum DirectorySizer {
         }
         return total
     }
+
+    /// Sizes a SINGLE filesystem entry — file OR directory — unlike `size(of:)`, which only
+    /// sums the regular files inside a directory tree and returns 0 for a plain file. The
+    /// large-files scanner/trasher need to size individual candidates one at a time, and those
+    /// candidates are very often plain files, so `size(of:)` alone isn't enough.
+    public static func allocatedSize(of url: URL) -> Int64 {
+        let resourceKeys: [URLResourceKey] = [
+            .isDirectoryKey,
+            .isRegularFileKey,
+            .totalFileAllocatedSizeKey,
+            .fileAllocatedSizeKey,
+            .fileSizeKey
+        ]
+        guard let values = try? url.resourceValues(forKeys: Set(resourceKeys)) else {
+            return 0
+        }
+
+        if values.isDirectory == true {
+            return size(of: url)
+        }
+        if values.isRegularFile == true {
+            return Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? values.fileSize ?? 0)
+        }
+        return 0
+    }
 }
